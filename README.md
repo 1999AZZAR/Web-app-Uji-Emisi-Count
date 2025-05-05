@@ -35,7 +35,7 @@ Aplikasi web untuk mengelola dan mencatat hasil uji emisi kendaraan. Aplikasi in
 
 1. Clone repository ini:
    ```bash
-   git clone <repository-url>
+   git clone git@github.com:khimawan/Web-app-Uji-Emisi-Count.git
    cd "Web app Uji Emisi Count"
    ```
 
