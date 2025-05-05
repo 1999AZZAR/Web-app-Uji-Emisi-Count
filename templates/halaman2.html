@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white shadow-lg rounded-lg p-6">
+        <div class="flex items-center mb-6">
+            <i class="fas fa-flask text-primary text-2xl mr-3"></i>
+            <h2 class="text-2xl font-semibold text-gray-800">Input Data Uji Emisi</h2>
+        </div>
+        
+        <div class="mb-6">
+            <label for="plat_nomor_select" class="block text-sm font-medium text-gray-700 mb-2">Pilih Kendaraan</label>
+            <select id="plat_nomor_select" required
+                    class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-primary focus:border-primary rounded-md">
+                <option value="" disabled selected>-- Pilih Plat Nomor --</option>
+            </select>
+        </div>
+        
+        <div id="kendaraan_info" class="mb-6" style="display: none;">
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-lg">
+                <div class="flex items-center">
+                    <i class="fas fa-car text-blue-600 mr-3"></i>
+                    <span id="kendaraan_detail" class="text-blue-700"></span>
+                </div>
+            </div>
+    
+            <form id="hasilUjiForm" class="space-y-6" style="display: none;">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label for="co" class="block text-sm font-medium text-gray-700">CO (%)</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-chart-line text-gray-400"></i>
+                            </div>
+                            <input type="number" id="co" name="co" step="0.01" required
+                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                                   placeholder="0.00">
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label for="co2" class="block text-sm font-medium text-gray-700">CO2 (%)</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-chart-line text-gray-400"></i>
+                            </div>
+                            <input type="number" id="co2" name="co2" step="0.01" required
+                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                                   placeholder="0.00">
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label for="hc" class="block text-sm font-medium text-gray-700">HC (ppm)</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-chart-line text-gray-400"></i>
+                            </div>
+                            <input type="number" id="hc" name="hc" required
+                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                                   placeholder="0">
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label for="o2" class="block text-sm font-medium text-gray-700">O2 (%)</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-chart-line text-gray-400"></i>
+                            </div>
+                            <input type="number" id="o2" name="o2" step="0.01" required
+                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                                   placeholder="0.00">
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label for="lambda" class="block text-sm font-medium text-gray-700">Lambda</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-chart-line text-gray-400"></i>
+                            </div>
+                            <input type="number" id="lambda" name="lambda" step="0.01" required
+                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                                   placeholder="0.00">
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <button type="submit" 
+                            class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        <i class="fas fa-flask mr-2"></i> Proses Hasil Uji
+                    </button>
+                </div>
+            </form>
+
+            <div id="hasil" class="space-y-4" style="display: none;">
+                <h3 class="text-lg font-semibold text-gray-800">Hasil Pengujian:</h3>
+                <div id="validasi" class="rounded-lg p-4"></div>
+                <div id="kelulusan" class="rounded-lg p-4"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Load kendaraan list when page loads
+async function loadKendaraanList() {
+    try {
+        const response = await fetch('/api/kendaraan-list');
+        const kendaraanList = await response.json();
+        const select = document.getElementById('plat_nomor_select');
+        
+        kendaraanList.forEach(kendaraan => {
+            const option = document.createElement('option');
+            option.value = kendaraan.plat_nomor;
+            option.textContent = `${kendaraan.plat_nomor} - ${kendaraan.merek} ${kendaraan.tipe}`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading kendaraan list:', error);
+    }
+}
+
+// Load kendaraan details when selected
+async function loadKendaraanDetails(platNomor) {
+    try {
+        const response = await fetch(`/api/kendaraan/${platNomor}`);
+        const kendaraan = await response.json();
+        
+        if (kendaraan) {
+            document.getElementById('kendaraan_detail').textContent = 
+                `${kendaraan.merek} ${kendaraan.tipe} (${kendaraan.tahun})`;
+            document.getElementById('kendaraan_info').style.display = 'block';
+            document.getElementById('hasilUjiForm').style.display = 'block';
+        } else {
+            document.getElementById('kendaraan_info').style.display = 'none';
+            document.getElementById('hasilUjiForm').style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error loading kendaraan details:', error);
+    }
+}
+
+// Load kendaraan list on page load
+document.addEventListener('DOMContentLoaded', loadKendaraanList);
+
+// Handle kendaraan selection
+document.getElementById('plat_nomor_select').addEventListener('change', (e) => {
+    const platNomor = e.target.value;
+    if (platNomor) {
+        loadKendaraanDetails(platNomor);
+    } else {
+        document.getElementById('kendaraan_info').style.display = 'none';
+        document.getElementById('hasilUjiForm').style.display = 'none';
+    }
+});
+
+document.getElementById('hasilUjiForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+        plat_nomor: document.getElementById('plat_nomor_select').value,
+        co: parseFloat(document.getElementById('co').value),
+        co2: parseFloat(document.getElementById('co2').value),
+        hc: parseFloat(document.getElementById('hc').value),
+        o2: parseFloat(document.getElementById('o2').value),
+        lambda_val: parseFloat(document.getElementById('lambda').value)
+    };
+
+    try {
+        const response = await fetch('/api/hasil-uji', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        const hasilDiv = document.getElementById('hasil');
+        const validasiDiv = document.getElementById('validasi');
+        const kelulusanDiv = document.getElementById('kelulusan');
+        
+        hasilDiv.style.display = 'block';
+        
+        if (result.valid) {
+            validasiDiv.className = 'bg-green-100 text-green-800 p-4 rounded-lg flex items-center';
+            validasiDiv.textContent = 'Data pengujian valid';
+            
+            if (result.lulus) {
+                kelulusanDiv.className = 'bg-green-100 text-green-800 p-4 rounded-lg flex items-center';
+                kelulusanDiv.textContent = 'Kendaraan LULUS uji emisi';
+            } else {
+                kelulusanDiv.className = 'bg-red-100 text-red-800 p-4 rounded-lg flex items-center';
+                kelulusanDiv.textContent = 'Kendaraan TIDAK LULUS uji emisi';
+            }
+        } else {
+            validasiDiv.className = 'bg-red-100 text-red-800 p-4 rounded-lg flex items-center';
+            validasiDiv.textContent = 'Data pengujian tidak valid';
+            kelulusanDiv.style.display = 'none';
+        }
+        
+        setTimeout(() => {
+            window.location.href = '/halaman3';
+        }, 3000);
+    } catch (error) {
+        alert('Terjadi kesalahan saat memproses data');
+    }
+});
+</script>
+{% endblock %}

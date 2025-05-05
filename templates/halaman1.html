@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white shadow-lg rounded-lg p-6">
+        <div class="flex items-center mb-6">
+            <i class="fas fa-car text-primary text-2xl mr-3"></i>
+            <h2 class="text-2xl font-semibold text-gray-800">Input Data Kendaraan</h2>
+        </div>
+        
+        <form id="kendaraanForm" class="space-y-6">
+            <div class="space-y-2">
+                <label for="jenis" class="block text-sm font-medium text-gray-700">Jenis Kendaraan</label>
+                <select id="jenis" name="jenis" required
+                        class="block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    <option value="" disabled selected>Pilih Jenis</option>
+                    <option value="umum">Umum</option>
+                    <option value="dinas">Dinas</option>
+                </select>
+            </div>
+
+            <div class="space-y-2">
+                <label for="plat_nomor" class="block text-sm font-medium text-gray-700">Plat Nomor</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-id-card text-gray-400"></i>
+                    </div>
+                    <input type="text" id="plat_nomor" name="plat_nomor" required
+                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                           placeholder="Contoh: B 1234 CD">
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label for="merek" class="block text-sm font-medium text-gray-700">Merek</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-trademark text-gray-400"></i>
+                    </div>
+                    <input type="text" id="merek" name="merek" required
+                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                           placeholder="Contoh: Toyota">
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label for="tipe" class="block text-sm font-medium text-gray-700">Tipe</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-car-side text-gray-400"></i>
+                    </div>
+                    <input type="text" id="tipe" name="tipe" required
+                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                           placeholder="Contoh: Avanza">
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label for="tahun" class="block text-sm font-medium text-gray-700">Tahun</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-calendar text-gray-400"></i>
+                    </div>
+                    <input type="number" id="tahun" name="tahun" required
+                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                           placeholder="Contoh: 2020">
+                </div>
+            </div>
+
+            <button type="submit" 
+                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                <i class="fas fa-save mr-2"></i> Simpan Data
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+function showNotification(message, isSuccess = true) {
+    // Remove existing notification if any
+    const existingNotif = document.getElementById('notification');
+    if (existingNotif) existingNotif.remove();
+
+    // Create new notification
+    const notification = document.createElement('div');
+    notification.id = 'notification';
+    notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg ${isSuccess ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+    notification.innerHTML = `
+        <div class="flex items-center">
+            <i class="${isSuccess ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'} mr-2"></i>
+            <span>${message}</span>
+        </div>
+    `;
+
+    document.body.appendChild(notification);
+
+    // Remove notification after 3 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+document.getElementById('kendaraanForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const data = {};
+    for (let [key, value] of formData.entries()) {
+        data[key] = value;
+    }
+
+    try {
+        const response = await fetch('/api/kendaraan', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        if (response.ok && result.success) {
+            showNotification('Data kendaraan berhasil disimpan!');
+            this.reset();
+        } else {
+            const errorMsg = result.error || 'Gagal menyimpan data kendaraan.';
+            showNotification(errorMsg, false);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Terjadi kesalahan saat menyimpan data.', false);
+    }
+});
+</script>
+{% endblock %}

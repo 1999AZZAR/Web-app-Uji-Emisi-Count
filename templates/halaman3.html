@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-blue-600 rounded-lg shadow-lg overflow-hidden">
+        <div class="p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-800 bg-opacity-75">
+                    <i class="fas fa-car text-white text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-blue-100 font-medium">Total Kendaraan</p>
+                    <p class="text-3xl font-bold text-white">{{ total_kendaraan }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-green-600 rounded-lg shadow-lg overflow-hidden">
+        <div class="p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-800 bg-opacity-75">
+                    <i class="fas fa-check-circle text-white text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-green-100 font-medium">Data Valid</p>
+                    <p class="text-3xl font-bold text-white">{{ total_valid }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-teal-600 rounded-lg shadow-lg overflow-hidden">
+        <div class="p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-teal-800 bg-opacity-75">
+                    <i class="fas fa-award text-white text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-teal-100 font-medium">Lulus Uji Emisi</p>
+                    <p class="text-3xl font-bold text-white">{{ total_lulus }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div class="p-6">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center">
+                <i class="fas fa-table text-gray-500 text-xl mr-2"></i>
+                <h2 class="text-xl font-semibold text-gray-800">Data Hasil Uji Emisi</h2>
+            </div>
+            <a href="/export-csv" class="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200">
+                <i class="fas fa-file-csv mr-2"></i>
+                Export CSV
+            </a>
+        </div>
+        <div class="overflow-x-auto custom-scrollbar">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plat Nomor</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kendaraan</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CO (%)</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CO2 (%)</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">HC (ppm)</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">O2 (%)</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lambda</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status Valid</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status Lulus</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for kendaraan, hasil in data %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ hasil.tanggal.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ kendaraan.plat_nomor }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ kendaraan.merek }} {{ kendaraan.tipe }} ({{ kendaraan.tahun }})</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ "%.2f"|format(hasil.co) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ "%.2f"|format(hasil.co2) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ hasil.hc }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ "%.2f"|format(hasil.o2) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ "%.2f"|format(hasil.lambda_val) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ 'bg-green-100 text-green-800' if hasil.valid else 'bg-red-100 text-red-800' }}">
+                                {{ 'Valid' if hasil.valid else 'Tidak Valid' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ 'bg-green-100 text-green-800' if hasil.lulus else 'bg-red-100 text-red-800' }}">
+                                {{ 'Lulus' if hasil.lulus else 'Tidak Lulus' }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
