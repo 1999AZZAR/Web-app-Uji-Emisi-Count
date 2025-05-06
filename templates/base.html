@@ -119,5 +119,28 @@
             }
         });
     </script>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 flex flex-col space-y-2 z-50"></div>
+    <script>
+      function showToast(message, type = 'info') {
+        const id = Date.now();
+        const colors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500', warning: 'bg-yellow-500' };
+        const toast = document.createElement('div');
+        toast.id = `toast-${id}`;
+        toast.className = `text-white px-4 py-2 rounded shadow ${colors[type] || colors.info} animate-slide-in`;
+        toast.textContent = message;
+        document.getElementById('toastContainer').appendChild(toast);
+        setTimeout(() => { toast.classList.replace('animate-slide-in','animate-fade-out'); setTimeout(() => toast.remove(), 500); }, 3000);
+      }
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes slide-in { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+        .animate-slide-in { animation: slide-in 0.5s ease-out forwards; }
+        .animate-fade-out { animation: fade-out 0.5s ease-in forwards; }
+      `;
+      document.head.appendChild(style);
+    </script>
 </body>
 </html>

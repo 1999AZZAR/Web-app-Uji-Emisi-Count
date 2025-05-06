@@ -1,214 +1,82 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="bg-white shadow-lg rounded-lg p-6">
-        <div class="flex items-center mb-6">
-            <i class="fas fa-flask text-primary text-2xl mr-3"></i>
-            <h2 class="text-2xl font-semibold text-gray-800">Input Data Uji Emisi</h2>
-        </div>
-        
-        <div class="mb-6">
-            <label for="plat_nomor_select" class="block text-sm font-medium text-gray-700 mb-2">Pilih Kendaraan</label>
-            <select id="plat_nomor_select" required
-                    class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-primary focus:border-primary rounded-md">
-                <option value="" disabled selected>-- Pilih Plat Nomor --</option>
-            </select>
-        </div>
-        
-        <div id="kendaraan_info" class="mb-6" style="display: none;">
+  <div class="max-w-4xl mx-auto">
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden p-6 space-y-6">
+      <div class="flex items-center mb-4">
+        <i class="fas fa-car-side text-primary text-2xl mr-2"></i>
+        <h2 class="text-2xl font-semibold text-gray-800">Daftar Kendaraan</h2>
+      </div>
+      <div class="mb-6 flex flex-wrap gap-4">
+        <input id="filterPlat" type="text" placeholder="Search Plat" class="flex-grow sm:flex-shrink-0 w-full sm:w-1/5 border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary" />
+        <select id="filterMerek" class="w-full sm:w-1/5 border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary">
+          <option value="">All Mereks</option>
+        </select>
+        <select id="filterTipe" class="w-full sm:w-1/5 border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary">
+          <option value="">All Tipes</option>
+        </select>
+        <select id="filterJenis" class="w-full sm:w-1/5 border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary">
+          <option value="">All Jenis</option>
+          <option value="umum">Umum</option>
+          <option value="dinas">Dinas</option>
+        </select>
+        <select id="filterTested" class="w-full sm:w-1/5 border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary">
+          <option value="">All</option>
+          <option value="tested">Tested</option>
+          <option value="untested">Untested</option>
+        </select>
+      </div>
+      <div id="vehicleCards" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+      <div id="loadMoreContainer" class="flex justify-center mt-4 hidden">
+        <button id="loadMoreBtn" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition">Load More</button>
+      </div>
+      <!-- Modal for test input -->
+      <div id="testModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden p-6 space-y-6 relative w-11/12 max-w-md">
+          <button id="modalClose" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+          <div id="kendaraan_info" class="mb-4">
             <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-lg">
-                <div class="flex items-center">
-                    <i class="fas fa-car text-blue-600 mr-3"></i>
-                    <span id="kendaraan_detail" class="text-blue-700"></span>
-                </div>
+              <div class="flex items-center">
+                <i class="fas fa-car text-blue-600 mr-3"></i>
+                <span id="kendaraan_detail" class="text-blue-700"></span>
+              </div>
             </div>
-    
-            <form id="hasilUjiForm" class="space-y-6" style="display: none;">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-2">
-                        <label for="co" class="block text-sm font-medium text-gray-700">CO (%)</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-chart-line text-gray-400"></i>
-                            </div>
-                            <input type="number" id="co" name="co" step="0.01" required
-                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                                   placeholder="0.00">
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-2">
-                        <label for="co2" class="block text-sm font-medium text-gray-700">CO2 (%)</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-chart-line text-gray-400"></i>
-                            </div>
-                            <input type="number" id="co2" name="co2" step="0.01" required
-                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                                   placeholder="0.00">
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-2">
-                        <label for="hc" class="block text-sm font-medium text-gray-700">HC (ppm)</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-chart-line text-gray-400"></i>
-                            </div>
-                            <input type="number" id="hc" name="hc" required
-                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                                   placeholder="0">
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-2">
-                        <label for="o2" class="block text-sm font-medium text-gray-700">O2 (%)</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-chart-line text-gray-400"></i>
-                            </div>
-                            <input type="number" id="o2" name="o2" step="0.01" required
-                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                                   placeholder="0.00">
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-2">
-                        <label for="lambda" class="block text-sm font-medium text-gray-700">Lambda</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-chart-line text-gray-400"></i>
-                            </div>
-                            <input type="number" id="lambda" name="lambda" step="0.01" required
-                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                                   placeholder="0.00">
-                        </div>
-                    </div>
-                </div>
-                
-                <div>
-                    <button type="submit" 
-                            class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                        <i class="fas fa-flask mr-2"></i> Proses Hasil Uji
-                    </button>
-                </div>
-            </form>
-
-            <div id="hasil" class="space-y-4" style="display: none;">
-                <h3 class="text-lg font-semibold text-gray-800">Hasil Pengujian:</h3>
-                <div id="validasi" class="rounded-lg p-4"></div>
-                <div id="kelulusan" class="rounded-lg p-4"></div>
+          </div>
+          <form id="hasilUjiForm" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- CO Field -->
+              <div><label for="co" class="block text-sm text-gray-700">CO (%)</label><input id="co" type="number" step="0.01" class="w-full border rounded p-2"></div>
+              <!-- CO2 Field -->
+              <div><label for="co2" class="block text-sm text-gray-700">CO2 (%)</label><input id="co2" type="number" step="0.01" class="w-full border rounded p-2"></div>
+              <!-- HC Field -->
+              <div><label for="hc" class="block text-sm text-gray-700">HC (ppm)</label><input id="hc" type="number" class="w-full border rounded p-2"></div>
+              <!-- O2 Field -->
+              <div><label for="o2" class="block text-sm text-gray-700">O2 (%)</label><input id="o2" type="number" step="0.01" class="w-full border rounded p-2"></div>
+              <!-- Lambda Field -->
+              <div><label for="lambda" class="block text-sm text-gray-700">Lambda</label><input id="lambda" type="number" step="0.01" class="w-full border rounded p-2"></div>
             </div>
+            <button type="submit" class="w-full bg-primary text-white py-2 rounded mt-4">Simpan Hasil</button>
+            <button id="clearBtn" type="button" class="w-full bg-red-500 text-white py-2 rounded hidden mt-2">Hapus Data Uji</button>
+          </form>
+          <div id="hasil" class="mt-4 space-y-2 hidden">
+            <h3 class="text-lg font-semibold">Hasil Pengujian:</h3>
+            <div id="validasi" class="p-2 rounded bg-gray-100"></div>
+            <div id="kelulusan" class="p-2 rounded bg-gray-100"></div>
+          </div>
         </div>
+      </div>
+      <!-- Confirm delete vehicle Modal -->
+      <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white shadow-lg rounded-lg p-6 relative w-11/12 max-w-sm">
+          <button id="confirmClose" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+          <p id="confirmText" class="text-gray-800 mb-4">Anda yakin?</p>
+          <div class="flex justify-end space-x-4">
+            <button id="confirmNo" class="py-1 px-4 bg-gray-300 rounded">Batal</button>
+            <button id="confirmYes" class="py-1 px-4 bg-red-500 text-white rounded">Hapus</button>
+          </div>
+        </div>
+      </div>
+      <!-- Test form and results will be handled dynamically -->
     </div>
-</div>
-
-<script>
-// Load kendaraan list when page loads
-async function loadKendaraanList() {
-    try {
-        const response = await fetch('/api/kendaraan-list');
-        const kendaraanList = await response.json();
-        const select = document.getElementById('plat_nomor_select');
-        
-        kendaraanList.forEach(kendaraan => {
-            const option = document.createElement('option');
-            option.value = kendaraan.plat_nomor;
-            option.textContent = `${kendaraan.plat_nomor} - ${kendaraan.merek} ${kendaraan.tipe}`;
-            select.appendChild(option);
-        });
-    } catch (error) {
-        console.error('Error loading kendaraan list:', error);
-    }
-}
-
-// Load kendaraan details when selected
-async function loadKendaraanDetails(platNomor) {
-    try {
-        const response = await fetch(`/api/kendaraan/${platNomor}`);
-        const kendaraan = await response.json();
-        
-        if (kendaraan) {
-            document.getElementById('kendaraan_detail').textContent = 
-                `${kendaraan.merek} ${kendaraan.tipe} (${kendaraan.tahun})`;
-            document.getElementById('kendaraan_info').style.display = 'block';
-            document.getElementById('hasilUjiForm').style.display = 'block';
-        } else {
-            document.getElementById('kendaraan_info').style.display = 'none';
-            document.getElementById('hasilUjiForm').style.display = 'none';
-        }
-    } catch (error) {
-        console.error('Error loading kendaraan details:', error);
-    }
-}
-
-// Load kendaraan list on page load
-document.addEventListener('DOMContentLoaded', loadKendaraanList);
-
-// Handle kendaraan selection
-document.getElementById('plat_nomor_select').addEventListener('change', (e) => {
-    const platNomor = e.target.value;
-    if (platNomor) {
-        loadKendaraanDetails(platNomor);
-    } else {
-        document.getElementById('kendaraan_info').style.display = 'none';
-        document.getElementById('hasilUjiForm').style.display = 'none';
-    }
-});
-
-document.getElementById('hasilUjiForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const formData = {
-        plat_nomor: document.getElementById('plat_nomor_select').value,
-        co: parseFloat(document.getElementById('co').value),
-        co2: parseFloat(document.getElementById('co2').value),
-        hc: parseFloat(document.getElementById('hc').value),
-        o2: parseFloat(document.getElementById('o2').value),
-        lambda_val: parseFloat(document.getElementById('lambda').value)
-    };
-
-    try {
-        const response = await fetch('/api/hasil-uji', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        });
-        
-        const result = await response.json();
-        
-        const hasilDiv = document.getElementById('hasil');
-        const validasiDiv = document.getElementById('validasi');
-        const kelulusanDiv = document.getElementById('kelulusan');
-        
-        hasilDiv.style.display = 'block';
-        
-        if (result.valid) {
-            validasiDiv.className = 'bg-green-100 text-green-800 p-4 rounded-lg flex items-center';
-            validasiDiv.textContent = 'Data pengujian valid';
-            
-            if (result.lulus) {
-                kelulusanDiv.className = 'bg-green-100 text-green-800 p-4 rounded-lg flex items-center';
-                kelulusanDiv.textContent = 'Kendaraan LULUS uji emisi';
-            } else {
-                kelulusanDiv.className = 'bg-red-100 text-red-800 p-4 rounded-lg flex items-center';
-                kelulusanDiv.textContent = 'Kendaraan TIDAK LULUS uji emisi';
-            }
-        } else {
-            validasiDiv.className = 'bg-red-100 text-red-800 p-4 rounded-lg flex items-center';
-            validasiDiv.textContent = 'Data pengujian tidak valid';
-            kelulusanDiv.style.display = 'none';
-        }
-        
-        setTimeout(() => {
-            window.location.href = '/halaman3';
-        }, 3000);
-    } catch (error) {
-        alert('Terjadi kesalahan saat memproses data');
-    }
-});
-</script>
+  </div>
+  <script src="{{ url_for('static', filename='js/halaman2.js') }}"></script>
 {% endblock %}

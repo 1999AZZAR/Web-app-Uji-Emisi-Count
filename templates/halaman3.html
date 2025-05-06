@@ -52,9 +52,9 @@
                 <i class="fas fa-table text-gray-500 text-xl mr-2"></i>
                 <h2 class="text-xl font-semibold text-gray-800">Data Hasil Uji Emisi</h2>
             </div>
-            <a href="/export-csv" class="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200">
+            <a href="{{ url_for('routes.export_csv') }}" class="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors duration-200">
                 <i class="fas fa-file-csv mr-2"></i>
-                Export CSV
+                Download CSV
             </a>
         </div>
         <div class="overflow-x-auto custom-scrollbar">
@@ -64,6 +64,7 @@
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plat Nomor</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kendaraan</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Instansi</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CO (%)</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CO2 (%)</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">HC (ppm)</th>
@@ -79,6 +80,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ hasil.tanggal.strftime('%Y-%m-%d %H:%M') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ kendaraan.plat_nomor }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ kendaraan.merek }} {{ kendaraan.tipe }} ({{ kendaraan.tahun }})</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ kendaraan.nama_instansi if kendaraan.nama_instansi and kendaraan.nama_instansi != '-' else '' }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ "%.2f"|format(hasil.co) }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ "%.2f"|format(hasil.co2) }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ hasil.hc }}</td>

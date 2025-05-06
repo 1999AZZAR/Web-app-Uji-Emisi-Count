@@ -12,6 +12,7 @@ Aplikasi web untuk mengelola dan mencatat hasil uji emisi kendaraan. Aplikasi in
 - 🎨 Modern UI dengan Tailwind CSS
 - 🔍 Validasi data real-time
 - 📋 Notifikasi status operasi
+- 📥 Batch upload kendaraan via CSV (download template & upload)
 
 ## Teknologi yang Digunakan
 
@@ -23,6 +24,7 @@ Aplikasi web untuk mengelola dan mencatat hasil uji emisi kendaraan. Aplikasi in
   - JavaScript untuk interaksi dinamis
 - **Validasi**: Server-side dan client-side validation
 - **Export**: CSV file generation
+- **CORS**: Cross-Origin Resource Sharing via flask_cors
 
 ## Persyaratan Sistem
 
@@ -122,9 +124,8 @@ Web app Uji Emisi Count/
 
 Untuk mengekspor data ke format CSV:
 1. Buka halaman "Hasil Uji"
-2. Klik tombol "Export CSV"
-3. File akan otomatis terdownload dengan format:
-   `hasil_uji_emisi_YYYYMMDD_HHMMSS.csv`
+2. Klik tombol "Download CSV"
+3. File akan otomatis terdownload dengan nama default `emisi.csv`
 
 Format CSV mencakup:
 - Tanggal dan waktu uji
