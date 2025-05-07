@@ -125,17 +125,21 @@
         co2: parseFloat(document.getElementById('co2').value),
         hc: parseFloat(document.getElementById('hc').value),
         o2: parseFloat(document.getElementById('o2').value),
-        lambda_val: parseFloat(document.getElementById('lambda').value)
+        lambda_val: parseFloat(document.getElementById('lambda').value),
+        user_id: parseInt(document.getElementById('currentUserId').value)
       };
       const rsp = await fetch(`/api/hasil-uji/${plat}`, {
-        method: 'PUT', headers: {'Content-Type':'application/json'},
+        method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify(payload)
       });
       if (rsp.ok) {
         const result = await rsp.json();
-        showToast(`Tersimpan – Valid: ${result.valid}, Lulus: ${result.lulus}`, 'success');
+        showToast(`Tersimpan – Valid: ${result.valid}, Lulus: ${result.lulus}, Operator: ${result.operator}`, 'success');
         fetchTestedPlats().then(() => loadVehicles(offset)); modal.classList.add('hidden');
-      } else showToast('Gagal menyimpan data', 'error');
+      } else {
+        const error = await rsp.json();
+        showToast(`Gagal menyimpan data: ${error.message}`, 'error');
+      }
     };
   }
 

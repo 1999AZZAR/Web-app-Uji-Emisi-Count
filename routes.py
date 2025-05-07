@@ -4,28 +4,70 @@ from datetime import datetime
 import csv, tempfile
 from io import BytesIO, StringIO
 from extensions import db
-from models import Kendaraan, HasilUji
-from flask import Blueprint, render_template, request, jsonify, current_app, send_file
+from models import Kendaraan, HasilUji, Config, User
+from flask import Blueprint, render_template, request, jsonify, current_app, send_file, redirect, url_for, flash
+from flask_login import login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash
 
 routes = Blueprint('routes', __name__)
 
+@routes.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        user = User.query.filter_by(username=username).first()
+        
+        if user and user.check_password(password):
+            login_user(user)
+            return redirect(url_for('routes.halaman1'))
+        flash('Invalid username or password')
+        return redirect(url_for('routes.login'))
+    
+    return render_template('login.html')
+
+@routes.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('routes.login'))
+
 @routes.route('/')
+@login_required
 def halaman1():
     return render_template('halaman1.html')
 
 @routes.route('/halaman2')
+@login_required
 def halaman2():
     return render_template('halaman2.html')
 
 @routes.route('/halaman3')
+@login_required
 def halaman3():
     try:
-        kendaraan_list = db.session.query(Kendaraan, HasilUji).join(HasilUji).all()
+        # Query kendaraan, hasil uji, and user in one go
+        data = db.session.query(Kendaraan, HasilUji, User).join(
+            HasilUji, Kendaraan.id == HasilUji.kendaraan_id
+        ).join(
+            User, HasilUji.user_id == User.id
+        ).all()
         total_kendaraan = Kendaraan.query.count()
         total_valid = HasilUji.query.filter_by(valid=True).count()
         total_lulus = HasilUji.query.filter_by(lulus=True).count()
+        
+        # Format the data for the template
+        formatted_data = []
+        for kendaraan, hasil, user in data:
+            formatted_data.append({
+                'kendaraan': kendaraan,
+                'hasil': hasil,
+                'operator': user.username,
+                'tanggal': hasil.tanggal.strftime('%Y-%m-%d %H:%M:%S')
+            })
+        
         return render_template('halaman3.html',
-                               data=kendaraan_list,
+                               data=formatted_data,
                                total_kendaraan=total_kendaraan,
                                total_valid=total_valid,
                                total_lulus=total_lulus)
@@ -33,7 +75,10 @@ def halaman3():
         current_app.logger.error(f'Database error: {str(e)}')
         return render_template('error.html', error='Database error occurred. Please try again later.')
 
+# This endpoint is inspired by the Project-Album repository (https://github.com/AMALNR98/Project-Album)
+# which is licensed under MIT. Modifications have been made to suit our specific needs.
 @routes.route('/api/kendaraan-list')
+@login_required
 def get_kendaraan_list():
     try:
         # pagination params
@@ -55,6 +100,7 @@ def get_kendaraan_list():
         return jsonify({'items': [], 'total': 0}), 500
 
 @routes.route('/api/kendaraan/<plat_nomor>')
+@login_required
 def get_kendaraan(plat_nomor):
     try:
         kendaraan = Kendaraan.query.filter_by(plat_nomor=plat_nomor).first()
@@ -73,6 +119,7 @@ def get_kendaraan(plat_nomor):
         return jsonify({'error': 'Database error occurred'}), 500
 
 @routes.route('/api/kendaraan', methods=['POST'])
+@login_required
 def tambah_kendaraan():
     try:
         data = request.json or {}
@@ -108,6 +155,7 @@ def tambah_kendaraan():
         return jsonify({'error':'Unexpected error occurred'}),500
 
 @routes.route('/api/hasil-uji/tested-plats')
+@login_required
 def tested_plats():
     try:
         # return plats with at least one test record
@@ -119,59 +167,88 @@ def tested_plats():
         return jsonify([])
 
 @routes.route('/api/hasil-uji', methods=['POST'])
+@login_required
 def tambah_hasil():
     try:
-        data = request.json or {}
-        needed=['plat_nomor','co','co2','hc','o2','lambda_val']
-        if any(k not in data for k in needed):
-            return jsonify({'error':'Missing required fields'}),400
-        knd = Kendaraan.query.filter_by(plat_nomor=data['plat_nomor']).first()
-        if not knd: return jsonify({'error':'Kendaraan tidak ditemukan'}),404
-        valid=True
-        if any(data[f]<0 for f in ['co','co2','hc','o2','lambda_val']): valid=False
-        lulus=False
-        if valid and data['co']<=4.5 and data['hc']<=1200: lulus=True
-        hasil=HasilUji(kendaraan_id=knd.id,co=data['co'],co2=data['co2'],hc=data['hc'],o2=data['o2'],lambda_val=data['lambda_val'],valid=valid,lulus=lulus)
-        db.session.add(hasil); db.session.commit()
-        return jsonify({'success':True,'valid':valid,'lulus':lulus})
-    except exc.SQLAlchemyError as e:
-        db.session.rollback(); current_app.logger.error(str(e))
-        return jsonify({'error':'Database error occurred'}),500
-    except Exception as e:
-        db.session.rollback(); current_app.logger.error(str(e))
-        return jsonify({'error':'Unexpected error occurred'}),500
+        data = request.get_json()
+        kendaraan = Kendaraan.query.filter_by(plat_nomor=data['plat_nomor']).first()
+        
+        if not kendaraan:
+            return jsonify({'error': 'Kendaraan tidak ditemukan'}), 404
 
-@routes.route('/api/hasil-uji/<plat_nomor>', methods=['GET', 'PUT', 'DELETE'])
+        hasil = HasilUji(
+            kendaraan_id=kendaraan.id,
+            co=float(data['co']),
+            co2=float(data['co2']),
+            hc=float(data['hc']),
+            o2=float(data['o2']),
+            lambda_val=float(data['lambda_val']),
+            lulus=data['lulus'],
+            valid=data['valid'],
+            user_id=current_user.id
+        )
+        db.session.add(hasil)
+        db.session.commit()
+        return jsonify({'message': 'Hasil uji berhasil ditambahkan'}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@routes.route('/api/hasil-uji/<plat_nomor>', methods=['GET', 'POST', 'DELETE'])
+@login_required
 def manage_hasil(plat_nomor):
     knd = Kendaraan.query.filter_by(plat_nomor=plat_nomor).first_or_404()
+    
     # DELETE: clear test data
     if request.method == 'DELETE':
         hasil = HasilUji.query.filter_by(kendaraan_id=knd.id).first()
         if not hasil:
-            return jsonify({'error': 'No test data to clear'}), 404
+            return jsonify({'error': 'No test data found'}), 404
         db.session.delete(hasil)
         db.session.commit()
-        return jsonify({'success': True})
-    hasil = HasilUji.query.filter_by(kendaraan_id=knd.id).first()
-    if request.method == 'GET':
+        return jsonify({'message': 'Test data cleared'}), 200
+    
+    # POST: create new test data
+    elif request.method == 'POST':
+        try:
+            data = request.get_json()
+            hasil = HasilUji(
+                kendaraan_id=knd.id,
+                co=float(data['co']),
+                co2=float(data['co2']),
+                hc=float(data['hc']),
+                o2=float(data['o2']),
+                lambda_val=float(data['lambda_val']),
+                valid=True,  # Always valid for now
+                lulus=True,  # Always pass for now
+                user_id=data['user_id']
+            )
+            db.session.add(hasil)
+            db.session.commit()
+            return jsonify({
+                'valid': hasil.valid,
+                'lulus': hasil.lulus,
+                'operator': hasil.user.username
+            }), 201
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
+    
+    # GET: get test data
+    else:
+        hasil = HasilUji.query.filter_by(kendaraan_id=knd.id).first()
         if not hasil:
-            return jsonify({'error': 'Data not found'}), 404
+            return jsonify({}), 404
         return jsonify({
-            'plat_nomor': plat_nomor,
             'co': hasil.co,
             'co2': hasil.co2,
             'hc': hasil.hc,
             'o2': hasil.o2,
             'lambda_val': hasil.lambda_val,
             'valid': hasil.valid,
-            'lulus': hasil.lulus
-        })
-    # PUT update
-    data = request.json or {}
-    if any(k not in data for k in ['co','co2','hc','o2','lambda_val']):
-        return jsonify({'error': 'Missing required fields'}), 400
-    # calculate valid and lulus
-    valid = all(data[f] >= 0 for f in ['co','co2','hc','o2','lambda_val'])
+            'lulus': hasil.lulus,
+            'operator': hasil.user.username
+        }), 200
     lulus = valid and data['co'] <= 4.5 and data['hc'] <= 1200
     if not hasil:
         hasil = HasilUji(kendaraan_id=knd.id)
@@ -187,7 +264,8 @@ def manage_hasil(plat_nomor):
     db.session.commit()
     return jsonify({'success': True, 'valid': valid, 'lulus': lulus})
 
-@routes.route('/api/kendaraan/<plat_nomor>', methods=['PUT','DELETE'])
+@routes.route('/api/kendaraan/<plat_nomor>', methods=['PUT', 'DELETE'])
+@login_required
 def modify_kendaraan(plat_nomor):
     if request.method=='DELETE':
         try:
@@ -210,34 +288,59 @@ def modify_kendaraan(plat_nomor):
         return jsonify({'error':'Update failed'}),500
 
 @routes.route('/export-csv')
+@login_required
 def export_csv():
     try:
-        results = db.session.query(Kendaraan, HasilUji).join(HasilUji).all()
-        # use StringIO to build CSV text then encode
-        si = StringIO()
-        writer = csv.writer(si)
-        writer.writerow(['Tanggal','Plat Nomor','Jenis','Merek','Tipe','Tahun','CO','CO2','HC','O2','Lambda','Valid','Lulus'])
-        for knd, hasil in results:
+        # Query all kendaraan with their hasil uji and user
+        kendaraan_list = db.session.query(Kendaraan, HasilUji, User).join(
+            HasilUji, Kendaraan.id == HasilUji.kendaraan_id
+        ).join(
+            User, HasilUji.user_id == User.id
+        ).all()
+        
+        # Create CSV file
+        output = StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        writer.writerow(['Jenis', 'Plat Nomor', 'Merek', 'Tipe', 'Tahun', 'Nama Instansi', 
+                        'CO', 'CO2', 'HC', 'O2', 'Lambda', 'Valid', 'Lulus', 'Tanggal', 'Operator'])
+        
+        # Write data
+        for kendaraan, hasil, user in kendaraan_list:
             writer.writerow([
-                hasil.tanggal.strftime('%Y-%m-%d %H:%M'),
-                knd.plat_nomor, knd.jenis, knd.merek, knd.tipe, knd.tahun,
-                hasil.co, hasil.co2, hasil.hc, hasil.o2, hasil.lambda_val,
-                hasil.valid, hasil.lulus
+                kendaraan.jenis,
+                kendaraan.plat_nomor,
+                kendaraan.merek,
+                kendaraan.tipe,
+                kendaraan.tahun,
+                kendaraan.nama_instansi,
+                hasil.co,
+                hasil.co2,
+                hasil.hc,
+                hasil.o2,
+                hasil.lambda_val,
+                'Ya' if hasil.valid else 'Tidak',
+                'Ya' if hasil.lulus else 'Tidak',
+                hasil.tanggal.strftime('%Y-%m-%d %H:%M:%S'),
+                user.username
             ])
-        mem = BytesIO()
-        mem.write(si.getvalue().encode('utf-8'))
-        mem.seek(0)
+        
+        # Create response
+        output.seek(0)
         return send_file(
-            mem,
+            BytesIO(output.getvalue().encode('utf-8')),
             mimetype='text/csv',
             as_attachment=True,
-            download_name='emisi.csv'
+            download_name='data_uji_emisi.csv'
         )
     except Exception as e:
-        current_app.logger.error(str(e))
-        return jsonify({'error':'CSV export failed'}),500
+        current_app.logger.error(f'Error exporting CSV: {str(e)}')
+        flash('Gagal mengekspor data ke CSV')
+        return redirect(url_for('routes.halaman3'))
 
 @routes.route('/api/kendaraan-mereks')
+@login_required
 def kendaraan_mereks():
     try:
         results = db.session.query(Kendaraan.merek).distinct().all()
@@ -247,7 +350,70 @@ def kendaraan_mereks():
         current_app.logger.error(str(e))
         return jsonify([])
 
+@routes.route('/config', methods=['GET', 'POST'])
+@login_required
+def config():
+    if not current_user.is_admin():
+        flash('Anda tidak memiliki akses ke halaman ini')
+        return redirect(url_for('routes.halaman1'))
+
+    config = Config.query.first()
+    if not config:
+        config = Config(
+            co_max=0.5,
+            co2_min=8.0,
+            hc_max=200.0,
+            o2_min=2.0,
+            lambda_min=0.95,
+            lambda_max=1.05
+        )
+        db.session.add(config)
+        db.session.commit()
+
+    if request.method == 'POST':
+        try:
+            config.co_max = float(request.form.get('co_max', 0.5))
+            config.co2_min = float(request.form.get('co2_min', 8.0))
+            config.hc_max = float(request.form.get('hc_max', 200.0))
+            config.o2_min = float(request.form.get('o2_min', 2.0))
+            config.lambda_min = float(request.form.get('lambda_min', 0.95))
+            config.lambda_max = float(request.form.get('lambda_max', 1.05))
+            
+            db.session.commit()
+            flash('Konfigurasi berhasil disimpan', 'success')
+            return redirect(url_for('routes.config'))
+        except Exception as e:
+            db.session.rollback()
+            flash('Gagal menyimpan konfigurasi: ' + str(e), 'error')
+
+    return render_template('config.html', config=config)
+
+@routes.route('/save-config', methods=['POST'])
+@login_required
+def save_config():
+    if not current_user.is_admin():
+        flash('Anda tidak memiliki akses ke halaman ini')
+        return redirect(url_for('routes.halaman1'))
+    try:
+        config = Config.get_config()
+        config.co_max = float(request.form['co_max'])
+        config.co2_min = float(request.form['co2_min'])
+        config.hc_max = float(request.form['hc_max'])
+        config.o2_min = float(request.form['o2_min'])
+        config.lambda_min = float(request.form['lambda_min'])
+        config.lambda_max = float(request.form['lambda_max'])
+        
+        db.session.commit()
+        flash('Konfigurasi berhasil disimpan')
+        return redirect(url_for('routes.config'))
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Error saving config: {str(e)}')
+        flash('Terjadi kesalahan saat menyimpan konfigurasi')
+        return redirect(url_for('routes.config'))
+
 @routes.route('/api/kendaraan-tipes')
+@login_required
 def kendaraan_tipes():
     try:
         results = db.session.query(Kendaraan.tipe).distinct().all()
@@ -258,6 +424,7 @@ def kendaraan_tipes():
         return jsonify([])
 
 @routes.route('/api/kendaraan/template', methods=['GET'])
+@login_required
 def download_template():
     # CSV header template for batch kendaraan input
     header = ['jenis','plat_nomor','merek','tipe','tahun','nama_instansi']
@@ -273,6 +440,7 @@ def download_template():
                      mimetype='text/csv')
 
 @routes.route('/api/kendaraan/batch-upload', methods=['POST'])
+@login_required
 def batch_upload_kendaraan():
     file = request.files.get('file')
     if not file:

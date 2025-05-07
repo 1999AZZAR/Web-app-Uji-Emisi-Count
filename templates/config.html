@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Konfigurasi Hasil Uji{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="p-6">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-6">Konfigurasi Hasil Uji</h2>
+            <form method="POST" action="{{ url_for('routes.save_config') }}">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- CO Section -->
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Batas CO (Carbon Monoxide)</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="co_max" class="block text-sm font-medium text-gray-700">Maksimum CO (ppm):</label>
+                                <input type="number" step="0.01" id="co_max" name="co_max" value="{{ config.co_max }}" 
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary" required>
+                                <p class="mt-1 text-sm text-gray-500">Jika CO > nilai ini, hasil uji tidak lulus</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- HC Section -->
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Batas HC (Hydrocarbons)</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="hc_max" class="block text-sm font-medium text-gray-700">Maksimum HC (ppm):</label>
+                                <input type="number" step="0.01" id="hc_max" name="hc_max" value="{{ config.hc_max }}" 
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary" required>
+                                <p class="mt-1 text-sm text-gray-500">Jika HC > nilai ini, hasil uji tidak lulus</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CO2 Section -->
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Batas CO2 (Carbon Dioxide)</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="co2_min" class="block text-sm font-medium text-gray-700">Minimum CO2 (%):</label>
+                                <input type="number" step="0.01" id="co2_min" name="co2_min" value="{{ config.co2_min }}" 
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary" required>
+                                <p class="mt-1 text-sm text-gray-500">Jika CO2 < nilai ini, hasil uji tidak lulus</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- O2 Section -->
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Batas O2 (Oxygen)</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="o2_min" class="block text-sm font-medium text-gray-700">Minimum O2 (%):</label>
+                                <input type="number" step="0.01" id="o2_min" name="o2_min" value="{{ config.o2_min }}" 
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary" required>
+                                <p class="mt-1 text-sm text-gray-500">Jika O2 < nilai ini, hasil uji tidak lulus</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lambda Section -->
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Batas Lambda</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="lambda_min" class="block text-sm font-medium text-gray-700">Minimum Lambda:</label>
+                                <input type="number" step="0.01" id="lambda_min" name="lambda_min" value="{{ config.lambda_min }}" 
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary" required>
+                            </div>
+                            <div>
+                                <label for="lambda_max" class="block text-sm font-medium text-gray-700">Maksimum Lambda:</label>
+                                <input type="number" step="0.01" id="lambda_max" name="lambda_max" value="{{ config.lambda_max }}" 
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary" required>
+                            </div>
+                            <p class="mt-1 text-sm text-gray-500">Lambda harus berada di antara nilai minimum dan maksimum untuk hasil uji lulus</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 text-center">
+                    <button type="submit" 
+                            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        Simpan Konfigurasi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

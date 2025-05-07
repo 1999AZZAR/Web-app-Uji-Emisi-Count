@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
   <div class="max-w-4xl mx-auto">
+    <input type="hidden" id="currentUserId" value="{{ current_user.id }}">
     <div class="bg-white shadow-lg rounded-lg overflow-hidden p-6 space-y-6">
       <div class="flex items-center mb-4">
         <i class="fas fa-car-side text-primary text-2xl mr-2"></i>
