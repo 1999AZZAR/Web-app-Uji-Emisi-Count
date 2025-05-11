@@ -1,9 +1,7 @@
 import os
-from flask import Flask
-from flask_cors import CORS
-from flask_login import LoginManager
-from sqlalchemy import inspect
 import logging
+from sqlalchemy import inspect
+from app_init import app, create_app
 from extensions import db
 from models import Kendaraan, HasilUji, User, Config
 
@@ -11,10 +9,11 @@ from models import Kendaraan, HasilUji, User, Config
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# db provided by extensions
-
+# Import routes after app is created to avoid circular imports
 from routes import routes as routes_blueprint
 
+# Register blueprints
+app.register_blueprint(routes_blueprint)
 
 def check_database_health():
     """Check if database is healthy and recreate if needed."""
@@ -39,30 +38,7 @@ def check_database_health():
         logger.error(f"Database health check failed: {str(e)}")
         return False
 
-def create_app():
-    app = Flask(__name__)
-    CORS(app)
-    
-    # Set a secret key for session management
-    app.config['SECRET_KEY'] = 'your-secret-key-here'  # Change this to a secure secret key in production
-    
-    # Configure database to use instance directory
-    db_path = os.path.join(app.instance_path, 'emisi.db')
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    
-    # Initialize database and Flask-Login
-    db.init_app(app)
-    login_manager = LoginManager()
-    login_manager.init_app(app)
-    login_manager.login_view = 'routes.login'
-    
-    # User loader callback
-    @login_manager.user_loader
-    def load_user(id):
-        return User.query.get(int(id))
-    
-    # Initialize database with default data
+def init_db():
     with app.app_context():
         # Check database health and recreate if needed
         if not check_database_health():
@@ -138,15 +114,7 @@ def create_app():
         cols = [col['name'] for col in inspector_obj.get_columns('kendaraan')]
         if 'nama_instansi' not in cols:
             db.engine.execute('ALTER TABLE kendaraan ADD COLUMN nama_instansi VARCHAR(100)')
-        inspector_obj = inspect(db.engine)
-        cols = [col['name'] for col in inspector_obj.get_columns('kendaraan')]
-        if 'nama_instansi' not in cols:
-            db.engine.execute('ALTER TABLE kendaraan ADD COLUMN nama_instansi VARCHAR(100)')
-
-    app.register_blueprint(routes_blueprint)
-    return app
-
 
 if __name__ == '__main__':
-    app = create_app()
+    init_db()
     app.run(debug=True)
