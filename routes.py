@@ -1,11 +1,10 @@
-from flask import Blueprint, render_template, request, jsonify, send_file, current_app
+from flask import Blueprint, render_template, request, jsonify, send_file, current_app, redirect, url_for, flash
 from sqlalchemy import exc, inspect
 from datetime import datetime
 import csv, tempfile
 from io import BytesIO, StringIO
 from extensions import db
 from models import Kendaraan, HasilUji, Config, User
-from flask import Blueprint, render_template, request, jsonify, current_app, send_file, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash
 
@@ -141,7 +140,7 @@ def tambah_kendaraan():
             return jsonify({'error':'Year must be a valid number'}),400
         if data['jenis'] not in ['umum','dinas']:
             return jsonify({'error':'Invalid vehicle type'}),400
-        if data.get('fuel_type') not in ['petrol', 'diesel']:
+        if data.get('fuel_type') not in ['bensin', 'solar']:
             return jsonify({'error': 'Invalid fuel type'}), 400
         
         # Get load category from data and validate it
@@ -151,8 +150,8 @@ def tambah_kendaraan():
         
         # Validate load category based on fuel type
         valid_categories = {
-            'petrol': ['kendaraan_muatan', 'kendaraan_penumpang'],
-            'diesel': ['<3.5ton', '>=3.5ton']
+            'bensin': ['kendaraan_muatan', 'kendaraan_penumpang'],
+            'solar': ['<3.5ton', '>=3.5ton']
         }
         if load_category not in valid_categories[data['fuel_type']]:
             return jsonify({'error': f'Invalid load category for {data["fuel_type"]}. Valid options are: {", ".join(valid_categories[data["fuel_type"]])}'}), 400
@@ -195,156 +194,6 @@ def tested_plats():
         current_app.logger.error(str(e))
         return jsonify([])
 
-@routes.route('/api/hasil-uji/<string:plat_nomor>', methods=['POST'])
-@login_required
-def tambah_hasil(plat_nomor):
-    try:
-        data = request.get_json()
-        kendaraan = Kendaraan.query.filter_by(plat_nomor=plat_nomor).first()
-        
-        if not kendaraan:
-            return jsonify({'error': 'Kendaraan tidak ditemukan'}), 404
-            
-        # Get configuration for validation
-        config = Config.query.first()
-        if not config:
-            return jsonify({'error': 'Konfigurasi tidak ditemukan'}), 500
-            
-        # Initialize variables
-        co = co2 = hc = o2 = lambda_val = None
-        
-        # For diesel vehicles, only opacity is required
-        if kendaraan.fuel_type == 'diesel':
-            # Only validate opacity for diesel vehicles
-            if 'opacity' not in data or data['opacity'] == '':
-                return jsonify({'error': 'Opasitas diperlukan untuk kendaraan diesel'}), 400
-        else:
-            # For petrol vehicles, validate all required fields
-            required_fields = ['co', 'co2', 'hc', 'o2', 'lambda_val']
-            for field in required_fields:
-                if field not in data or data[field] == '':
-                    return jsonify({'error': f'Field {field} diperlukan untuk kendaraan bensin'}), 400
-            
-            try:
-                co = float(data['co']) if 'co' in data and data['co'] != '' else None
-                co2 = float(data['co2']) if 'co2' in data and data['co2'] != '' else None
-                hc = int(data['hc']) if 'hc' in data and data['hc'] != '' else None
-                o2 = float(data['o2']) if 'o2' in data and data['o2'] != '' else None
-                lambda_val = float(data['lambda_val']) if 'lambda_val' in data and data['lambda_val'] != '' else None
-                
-                if any(val is not None and val < 0 for val in [co, co2, hc, o2, lambda_val]):
-                    return jsonify({'error': 'Nilai tidak boleh negatif'}), 400
-            except (ValueError, TypeError) as e:
-                return jsonify({'error': 'Nilai tidak valid'}), 400
-                
-        # Initialize validation flags
-        valid = True
-        lulus = True
-        
-        # For diesel vehicles, check opacity
-        opacity = None
-        if kendaraan.fuel_type == 'diesel':
-            if 'opacity' not in data or data['opacity'] == '':  # Check for empty string
-                return jsonify({'error': 'Opasitas diperlukan untuk kendaraan diesel'}), 400
-                
-            try:
-                opacity = float(data['opacity'])
-                if opacity < 0 or opacity > 100.0:
-                    return jsonify({
-                        'error': f'Nilai opasitas ({opacity}%) harus antara 0% dan 100%',
-                        'lulus': False,
-                        'valid': False
-                    }), 400
-                
-                # Check if opacity exceeds maximum allowed
-                if config and config.opacity_max is not None and opacity > float(config.opacity_max):
-                    lulus = False  # Test fails if opacity is over the limit
-                    # Still save the data as it's a valid measurement, just not passing
-                    current_app.logger.info(f'Opacity {opacity}% exceeds maximum allowed {config.opacity_max}%, marking as failed')
-                    
-            except (ValueError, TypeError) as e:
-                current_app.logger.error(f'Error parsing opacity: {str(e)}')
-                return jsonify({'error': 'Nilai opasitas tidak valid'}), 400
-        
-        # For petrol vehicles, validate all emission parameters
-        if kendaraan.fuel_type == 'bensin':
-            # Set default values if config is not available
-            co_max = float(config.co_max) if config and config.co_max is not None else 0.5
-            hc_max = float(config.hc_max) if config and config.hc_max is not None else 200
-            o2_max = float(config.o2_max) if config and config.o2_max is not None else 3.0
-            o2_min = float(config.o2_min) if config and config.o2_min is not None else 0.0
-            lambda_min = float(config.lambda_min) if config and config.lambda_min is not None else 0.97
-            lambda_max = float(config.lambda_max) if config and config.lambda_max is not None else 1.03
-            
-            # Validate each parameter
-            if co is not None and co > co_max:
-                lulus = False
-            if hc is not None and hc > hc_max:
-                lulus = False
-            if o2 is not None and (o2 > o2_max or o2 < o2_min):
-                lulus = False
-            if lambda_val is not None and (lambda_val < lambda_min or lambda_val > lambda_max):
-                lulus = False
-        
-        # For diesel vehicles, only check opacity (already validated above)
-        
-        # Check if the vehicle already has test results
-        existing_test = HasilUji.query.filter_by(kendaraan_id=kendaraan.id).first()
-        
-        # For diesel vehicles, set default values for other fields
-        if kendaraan.fuel_type == 'diesel':
-            co = co if co is not None else 0.0
-            co2 = co2 if co2 is not None else 0.0
-            hc = hc if hc is not None else 0
-            o2 = o2 if o2 is not None else 0.0
-            lambda_val = lambda_val if lambda_val is not None else 0.0
-        else:
-            # For petrol vehicles, ensure opacity is None
-            opacity = None
-        
-        if existing_test:
-            # Update existing test
-            existing_test.co = co
-            existing_test.co2 = co2
-            existing_test.hc = hc
-            existing_test.o2 = o2
-            existing_test.lambda_val = lambda_val
-            existing_test.opacity = opacity
-            existing_test.lulus = lulus
-            existing_test.valid = valid
-            existing_test.user_id = current_user.id
-            existing_test.tanggal = datetime.utcnow()
-            hasil = existing_test
-        else:
-            # Create new test
-            hasil = HasilUji(
-                kendaraan_id=kendaraan.id,
-                co=co,
-                co2=co2,
-                hc=hc,
-                o2=o2,
-                lambda_val=lambda_val,
-                opacity=opacity,
-                lulus=lulus,
-                valid=valid,
-                user_id=current_user.id,
-                tanggal=datetime.utcnow()
-            )
-            db.session.add(hasil)
-        
-        db.session.commit()
-        return jsonify({
-            'message': 'Hasil uji berhasil disimpan',
-            'lulus': lulus,
-            'valid': valid,
-            'operator': current_user.username
-        }), 200
-        
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f'Error in tambah_hasil: {str(e)}')
-        return jsonify({'error': 'Terjadi kesalahan server'}), 500
-
 @routes.route('/api/hasil-uji/<string:plat_nomor>', methods=['GET', 'POST', 'DELETE'])
 @login_required
 def manage_hasil(plat_nomor):
@@ -367,7 +216,7 @@ def manage_hasil(plat_nomor):
             'lulus': hasil.lulus,
             'valid': hasil.valid,
             'user_id': hasil.user_id,
-            'tanggal_uji': hasil.tanggal_uji.isoformat() if hasil.tanggal_uji else None,
+            'tanggal': hasil.tanggal.isoformat() if hasil.tanggal else None,
             'operator': hasil.user.username if hasil.user else None
         }
         
@@ -385,99 +234,9 @@ def manage_hasil(plat_nomor):
         db.session.commit()
         return jsonify({'message': 'Test data cleared'}), 200
     
-    # POST: create new test data
+    # POST: create new test data (handled by tambah_hasil function)
     elif request.method == 'POST':
-        try:
-            data = request.get_json()
-            
-            # Get configuration for opacity threshold
-            config = Config.query.first()
-            opacity_max = getattr(config, 'opacity_max', 50.0)  # Default to 50.0 if not set
-            
-            # For diesel vehicles, check if opacity is provided and within limits
-            opacity = None
-            if kendaraan.fuel_type == 'diesel':
-                if 'opacity' not in data:
-                    return jsonify({'error': 'Opasitas wajib diisi untuk kendaraan diesel'}), 400
-                opacity = float(data.get('opacity', 0))
-                if opacity > opacity_max:
-                    return jsonify({
-                        'error': f'Opasitas ({opacity}%) melebihi batas maksimum yang diizinkan ({opacity_max}%)',
-                        'lulus': False,
-                        'valid': False
-                    }), 400
-            
-            # Check if test results already exist for this vehicle
-            existing_test = HasilUji.query.filter_by(kendaraan_id=kendaraan.id).first()
-            
-            if existing_test:
-                # Update existing test
-                existing_test.co = float(data['co'])
-                existing_test.co2 = float(data['co2'])
-                existing_test.hc = float(data['hc'])
-                existing_test.o2 = float(data['o2'])
-                existing_test.lambda_val = float(data['lambda_val'])
-                existing_test.opacity = opacity
-                existing_test.lulus = data.get('lulus', True)
-                existing_test.valid = data.get('valid', True)
-                existing_test.user_id = data['user_id']
-                existing_test.tanggal_uji = datetime.utcnow()
-            else:
-                # Create new test
-                hasil = HasilUji(
-                    kendaraan_id=kendaraan.id,
-                    co=float(data['co']),
-                    co2=float(data['co2']),
-                    hc=float(data['hc']),
-                    o2=float(data['o2']),
-                    lambda_val=float(data['lambda_val']),
-                    opacity=opacity,
-                    lulus=data.get('lulus', True),
-                    valid=data.get('valid', True),
-                    user_id=data['user_id'],
-                    tanggal_uji=datetime.utcnow()
-                )
-                db.session.add(hasil)
-            
-            db.session.commit()
-            return jsonify({
-                'valid': hasil.valid,
-                'lulus': hasil.lulus,
-                'operator': hasil.user.username
-            }), 201
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'error': str(e)}), 500
-    
-    # GET: get test data
-    else:
-        hasil = HasilUji.query.filter_by(kendaraan_id=knd.id).first()
-        if not hasil:
-            return jsonify({}), 404
-        return jsonify({
-            'co': hasil.co,
-            'co2': hasil.co2,
-            'hc': hasil.hc,
-            'o2': hasil.o2,
-            'lambda_val': hasil.lambda_val,
-            'valid': hasil.valid,
-            'lulus': hasil.lulus,
-            'operator': hasil.user.username
-        }), 200
-    lulus = valid and data['co'] <= 4.5 and data['hc'] <= 1200
-    if not hasil:
-        hasil = HasilUji(kendaraan_id=knd.id)
-        db.session.add(hasil)
-    # assign
-    hasil.co = data['co']
-    hasil.co2 = data['co2']
-    hasil.hc = data['hc']
-    hasil.o2 = data['o2']
-    hasil.lambda_val = data['lambda_val']
-    hasil.valid = valid
-    hasil.lulus = lulus
-    db.session.commit()
-    return jsonify({'success': True, 'valid': valid, 'lulus': lulus})
+        return tambah_hasil(plat_nomor)
 
 @routes.route('/api/kendaraan/<plat_nomor>', methods=['PUT', 'DELETE'])
 @login_required
@@ -524,7 +283,7 @@ def export_csv():
         # Write data
         for kendaraan, hasil, user in kendaraan_list:
             # Map fuel type to Indonesian
-            fuel_type = 'Solar' if kendaraan.fuel_type == 'diesel' else 'Bensin'
+            fuel_type = 'Solar' if kendaraan.fuel_type == 'solar' else 'Bensin'
             
             # Format the row data
             row = [
@@ -540,7 +299,7 @@ def export_csv():
                 hasil.hc,
                 hasil.o2,
                 hasil.lambda_val,
-                f"{hasil.opacity:.1f}" if kendaraan.fuel_type == 'diesel' and hasil.opacity is not None else 'N/A',
+                f"{hasil.opacity:.1f}" if kendaraan.fuel_type == 'solar' and hasil.opacity is not None else 'N/A',
                 'Ya' if hasil.valid else 'Tidak',
                 'Lulus' if hasil.lulus else 'Tidak Lulus',
                 hasil.tanggal.strftime('%Y-%m-%d %H:%M:%S') if hasil.tanggal else '',
@@ -654,7 +413,7 @@ def kendaraan_tipes():
 def download_template():
     # CSV header template for batch kendaraan input
     headers = ['jenis', 'plat_nomor', 'merek', 'tipe', 'tahun', 'fuel_type', 'nama_instansi', 'load_category']
-    # Note: fuel_type should be either 'petrol' or 'diesel' (without quotes)
+    # Note: fuel_type should be either 'bensin' or 'solar' (without quotes)
     si = StringIO()
     writer = csv.writer(si)
     writer.writerow(headers)
@@ -701,10 +460,8 @@ def batch_upload_kendaraan():
                 
                 # Normalize fuel_type
                 fuel_raw = row.get('fuel_type','').strip().lower()
-                if fuel_raw in ['diesel', 'solar']:
-                    fuel_type = 'diesel'
-                elif fuel_raw in ['petrol', 'bensin', 'gasoline', 'nafta']:
-                    fuel_type = 'petrol'
+                if fuel_raw in ['bensin', 'solar']:
+                    fuel_type = 'bensin' if fuel_raw == 'bensin' else 'solar'
                 else:
                     errors.append({'row':idx,'error':f'Invalid or missing fuel_type: {row.get("fuel_type","")}'})
                     continue
@@ -718,8 +475,8 @@ def batch_upload_kendaraan():
                 
                 load_category = row['load_category'].strip()
                 valid_categories = {
-                    'petrol': ['kendaraan_muatan', 'kendaraan_penumpang'],
-                    'diesel': ['<3.5ton', '>=3.5ton']
+                    'bensin': ['kendaraan_muatan', 'kendaraan_penumpang'],
+                    'solar': ['<3.5ton', '>=3.5ton']
                 }
                 if load_category not in valid_categories[fuel_type]:
                     errors.append({'row':idx,'error':f'Invalid load_category for {fuel_type}'})
@@ -745,7 +502,7 @@ def batch_upload_kendaraan():
                     continue
                 
                 # Get parameters based on vehicle type
-                if fuel_type == 'diesel':
+                if fuel_type == 'solar':
                     # Determine year range
                     year_range = '<2010' if tahun < 2010 else '2010-2021' if tahun <= 2021 else '>2021'
                     params = config.diesel_parameters[load_category][year_range]
@@ -762,7 +519,7 @@ def batch_upload_kendaraan():
                         kelulusan = f'Lulus: Opasitas dalam batas ({params["opacity_max"]}%)'
                     else:
                         kelulusan = f'Tidak Lulus: Opasitas melebihi batas ({params["opacity_max"]}%)'
-                else:  # petrol
+                else:  # bensin
                     # Determine year range
                     year_range = '<2007' if tahun < 2007 else '2007-2018' if tahun <= 2018 else '>2018'
                     params = config.gasoline_parameters[load_category][year_range]

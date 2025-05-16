@@ -4,16 +4,30 @@ from sqlalchemy import inspect, text
 from app_init import app, create_app
 from extensions import db
 from models import Kendaraan, HasilUji, User, Config
+from flask import redirect, url_for
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Import routes after app is created to avoid circular imports
-from routes import routes as routes_blueprint
+# Import blueprints
+from blueprints.auth import auth
+from blueprints.vehicles import vehicles
+from blueprints.tests import tests
+from blueprints.reports import reports
+from blueprints.api import api
 
 # Register blueprints
-app.register_blueprint(routes_blueprint)
+app.register_blueprint(auth)
+app.register_blueprint(vehicles)
+app.register_blueprint(tests)
+app.register_blueprint(reports)
+app.register_blueprint(api)
+
+# Default route redirects to vehicles dashboard
+@app.route('/')
+def index():
+    return redirect(url_for('vehicles.dashboard'))
 
 def check_database_health():
     """Check if database is healthy and recreate if needed."""
@@ -40,104 +54,127 @@ def check_database_health():
 
 def init_db():
     with app.app_context():
-        # Check database health and recreate if needed
-        if not check_database_health():
-            logger.info("Recreating database...")
-            db.drop_all()
+        # Create all tables if they don't exist
+        try:
             db.create_all()
-            
-            # Create default configuration if needed
-            config = Config.query.first()
-            if not config:
-                config = Config(
-                    gasoline_co_max=0.5,
-                    gasoline_hc_max=200.0,
-                    gasoline_co2_max=12.0,
-                    gasoline_o2_max=1.0,
-                    gasoline_lambda_max=1.05,
-                    diesel_opacity_max=50.0
+        except Exception as e:
+            logger.error(f"Error in db.create_all(): {str(e)}")
+            # If there's an error, we'll try to handle schema migrations manually
+            pass
+
+        # Ensure schema is up to date
+        try:
+            update_schema()
+        except Exception as e:
+            logger.error(f"Error in update_schema(): {str(e)}")
+
+        # Ensure we have a default Config if none exists
+        try:
+            config_exists = db.session.query(db.exists().where(Config.id == 1)).scalar()
+            if not config_exists:
+                default_config = Config()
+                db.session.add(default_config)
+                db.session.commit()
+        except Exception as e:
+            logger.error(f"Error checking or creating config: {str(e)}")
+            db.session.rollback()
+
+        # Create admin user if it doesn't exist
+        try:
+            admin_exists = db.session.query(db.exists().where(User.username == 'admin')).scalar()
+            if not admin_exists:
+                admin = User(username='admin', email='admin@example.com', role='admin')
+                admin.set_password('admin')
+                db.session.add(admin)
+                db.session.commit()
+        except Exception as e:
+            logger.error(f"Error checking or creating admin user: {str(e)}")
+            db.session.rollback()
+    
+    return app
+
+def update_schema():
+    """Update database schema with any new columns or tables"""
+    with app.app_context():
+        # Get existing tables
+        inspector = inspect(db.engine)
+        existing_tables = inspector.get_table_names()
+        
+        # Add audit_logs table if missing
+        if 'audit_logs' not in existing_tables:
+            logger.info("Creating audit_logs table...")
+            db.session.execute(text('''
+                CREATE TABLE audit_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    user_id INTEGER,
+                    action VARCHAR(50) NOT NULL,
+                    entity_type VARCHAR(50) NOT NULL,
+                    entity_id INTEGER,
+                    details TEXT,
+                    FOREIGN KEY(user_id) REFERENCES users(id)
                 )
-                db.session.add(config)
-                db.session.commit()
-                
-            # Create all users in one transaction
-            base_password = 'user123'
-            
-            # Create admin user
-            admin_user = User(username='admin', email='admin@example.com', role='admin')
-            admin_user.set_password('admin123')
-            db.session.add(admin_user)
-            
-            # Create 25 general users
-            for i in range(1, 26):
-                username = f'user{i}'
-                email = f'user{i}@example.com'
-                user = User(username=username, email=email, role='general')
-                user.set_password(base_password)
-                db.session.add(user)
-            
+            '''))
             db.session.commit()
-            logger.info("Database recreated successfully")
-        
-        # Maintain users if database exists
-        else:
-            # Check and create admin user if needed
-            admin_user = User.query.filter_by(role='admin').first()
-            if not admin_user:
-                admin_user = User(username='admin', email='admin@example.com', role='admin')
-                admin_user.set_password('admin123')
-                db.session.add(admin_user)
             
-            # Check and create missing general users
-            general_users = User.query.filter_by(role='general').all()
-            if len(general_users) < 25:
-                base_password = 'user123'
-                existing_usernames = {user.username for user in general_users}
-                
-                # Create missing users starting from the next available number
-                for i in range(1, 26):
-                    username = f'user{i}'
-                    if username not in existing_usernames:
-                        email = f'user{i}@example.com'
-                        user = User(username=username, email=email, role='general')
-                        user.set_password(base_password)
-                        db.session.add(user)
-                
-            db.session.commit()
+        # Update schema for each table that might need columns added
         
-        # Commit all changes
+        # Only modify existing tables
+        inspector = inspect(db.engine)
+        existing_tables = inspector.get_table_names()
+        
+        # Kendaraan table updates
+        if 'kendaraan' in existing_tables:
+            kendaraan_cols = [column['name'] for column in inspector.get_columns('kendaraan')]
+            if 'created_at' not in kendaraan_cols:
+                logger.info("Adding created_at to kendaraan table")
+                db.session.execute(text('ALTER TABLE kendaraan ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP'))
+            if 'updated_at' not in kendaraan_cols:
+                logger.info("Adding updated_at to kendaraan table")
+                db.session.execute(text('ALTER TABLE kendaraan ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP'))
+        
+        # User table updates
+        if 'users' in existing_tables:
+            user_cols = [column['name'] for column in inspector.get_columns('users')]
+            if 'email' not in user_cols:
+                logger.info("Adding email to users table")
+                db.session.execute(text('ALTER TABLE users ADD COLUMN email VARCHAR(120) DEFAULT ""'))
+            if 'active' not in user_cols:
+                logger.info("Adding active to users table")
+                db.session.execute(text('ALTER TABLE users ADD COLUMN active BOOLEAN DEFAULT 1'))
+            if 'created_at' not in user_cols:
+                logger.info("Adding created_at to users table")
+                db.session.execute(text('ALTER TABLE users ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP'))
+            if 'updated_at' not in user_cols:
+                logger.info("Adding updated_at to users table")
+                db.session.execute(text('ALTER TABLE users ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP'))
+            if 'last_login' not in user_cols:
+                logger.info("Adding last_login to users table")
+                db.session.execute(text('ALTER TABLE users ADD COLUMN last_login DATETIME'))
+        
+        # HasilUji table updates
+        if 'hasil_uji' in existing_tables:
+            hasiluji_cols = [column['name'] for column in inspector.get_columns('hasil_uji')]
+            if 'created_at' not in hasiluji_cols:
+                logger.info("Adding created_at to hasil_uji table")
+                db.session.execute(text('ALTER TABLE hasil_uji ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP'))
+            if 'updated_at' not in hasiluji_cols:
+                logger.info("Adding updated_at to hasil_uji table")
+                db.session.execute(text('ALTER TABLE hasil_uji ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP'))
+            
+        # Config table updates
+        if 'config' in existing_tables:
+            config_cols = [column['name'] for column in inspector.get_columns('config')]
+            if 'created_at' not in config_cols:
+                logger.info("Adding created_at to config table")
+                db.session.execute(text('ALTER TABLE config ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP'))
+            if 'updated_at' not in config_cols:
+                logger.info("Adding updated_at to config table")
+                db.session.execute(text('ALTER TABLE config ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP'))
+            
+        # Commit all schema changes
         db.session.commit()
-        logger.info('Database initialized with default data')
-        
-        # Ensure required columns exist for existing DB
-        inspector_obj = inspect(db.engine)
-        cols = [col['name'] for col in inspector_obj.get_columns('kendaraan')]
-        
-        # Add nama_instansi column if missing
-        if 'nama_instansi' not in cols:
-            db.engine.execute('ALTER TABLE kendaraan ADD COLUMN nama_instansi VARCHAR(100)')
-            
-        # Add load_category column if missing
-        if 'load_category' not in cols:
-            db.engine.execute('ALTER TABLE kendaraan ADD COLUMN load_category VARCHAR(20) NOT NULL')
-            
-        # Add default value for existing records if load_category is missing
-        if 'load_category' in cols:
-            # Check if there are any NULL values in load_category
-            result = db.session.execute(text('SELECT COUNT(*) FROM kendaraan WHERE load_category IS NULL')).first()
-            if result[0] > 0:
-                # Update NULL values with a default value based on fuel_type
-                db.session.execute(text("""
-                    UPDATE kendaraan
-                    SET load_category = CASE 
-                        WHEN fuel_type = 'petrol' THEN 'kendaraan_penumpang'
-                        WHEN fuel_type = 'diesel' THEN '<3.5ton'
-                        ELSE 'kendaraan_penumpang'
-                    END
-                    WHERE load_category IS NULL
-                """))
-                db.session.commit()
 
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5005)

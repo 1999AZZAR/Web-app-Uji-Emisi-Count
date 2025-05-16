@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto">
+<div class="max-w-4xl mx-auto">
     <div class="bg-white shadow-lg rounded-lg p-6">
         <div class="flex items-center mb-6">
             <i class="fas fa-car text-primary text-2xl mr-3"></i>
@@ -9,18 +9,105 @@
         </div>
         
         <form id="kendaraanForm" class="space-y-6">
-            <div class="space-y-2">
-                <label for="jenis" class="block text-sm font-medium text-gray-700">Jenis Kendaraan</label>
-                <select id="jenis" name="jenis" required
-                        class="block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
-                    <option value="" disabled selected>Pilih Jenis</option>
-                    <option value="umum">Umum</option>
-                    <option value="dinas">Dinas</option>
-                </select>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Jenis Kendaraan -->
+                <div class="space-y-2">
+                    <label for="jenis" class="block text-sm font-medium text-gray-700">Jenis Kendaraan <span class="text-red-500">*</span></label>
+                    <select id="jenis" name="jenis" required
+                            class="block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                        <option value="" disabled selected>Pilih Jenis</option>
+                        <option value="umum">Umum</option>
+                        <option value="dinas">Dinas</option>
+                    </select>
+                    <div class="error-message text-red-500 text-xs hidden" id="jenis-error"></div>
+                </div>
+
+                <!-- Plat Nomor -->
+                <div class="space-y-2">
+                    <label for="plat_nomor" class="block text-sm font-medium text-gray-700">Plat Nomor <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-id-card text-gray-400"></i>
+                        </div>
+                        <input type="text" id="plat_nomor" name="plat_nomor" required
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                               placeholder="Contoh: B 1234 CD">
+                    </div>
+                    <div class="error-message text-red-500 text-xs hidden" id="plat_nomor-error"></div>
+                </div>
+            
+                <!-- Merek -->
+                <div class="space-y-2">
+                    <label for="merek" class="block text-sm font-medium text-gray-700">Merek <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-trademark text-gray-400"></i>
+                        </div>
+                        <input type="text" id="merek" name="merek" required
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                               placeholder="Contoh: Toyota">
+                    </div>
+                    <div class="error-message text-red-500 text-xs hidden" id="merek-error"></div>
+                </div>
+
+                <!-- Tipe -->
+                <div class="space-y-2">
+                    <label for="tipe" class="block text-sm font-medium text-gray-700">Tipe <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-car-side text-gray-400"></i>
+                        </div>
+                        <input type="text" id="tipe" name="tipe" required
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                               placeholder="Contoh: Avanza">
+                    </div>
+                    <div class="error-message text-red-500 text-xs hidden" id="tipe-error"></div>
+                </div>
+
+                <!-- Tahun -->
+                <div class="space-y-2">
+                    <label for="tahun" class="block text-sm font-medium text-gray-700">Tahun <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-calendar text-gray-400"></i>
+                        </div>
+                        <input type="number" id="tahun" name="tahun" required min="1900" max="2100"
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                               placeholder="Contoh: 2020">
+                    </div>
+                    <div class="error-message text-red-500 text-xs hidden" id="tahun-error"></div>
+                </div>
+
+                <!-- Bahan Bakar -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">Bahan Bakar <span class="text-red-500">*</span></label>
+                    <div class="flex gap-4">
+                        <div class="inline-flex items-center">
+                            <input type="radio" id="bensin_radio" name="fuel_type" value="bensin" checked class="fuel-type-radio h-4 w-4 text-primary focus:ring-primary">
+                            <label for="bensin_radio" class="ml-2 text-sm text-gray-700">Bensin</label>
+                        </div>
+                        <div class="inline-flex items-center">
+                            <input type="radio" id="solar_radio" name="fuel_type" value="solar" class="fuel-type-radio h-4 w-4 text-primary focus:ring-primary">
+                            <label for="solar_radio" class="ml-2 text-sm text-gray-700">Solar</label>
+                        </div>
+                    </div>
+                    <div class="error-message text-red-500 text-xs hidden" id="fuel_type-error"></div>
+                </div>
             </div>
 
-            <div class="space-y-2" id="instansi_div" style="display: none;">
-                <label for="nama_instansi" class="block text-sm font-medium text-gray-700">Nama Instansi</label>
+            <!-- Load Category -->
+            <div class="space-y-2">
+                <label for="load_category" class="block text-sm font-medium text-gray-700">Kategori Beban <span class="text-red-500">*</span></label>
+                <select id="load_category" name="load_category" required
+                        class="block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    <!-- Options will be populated dynamically based on fuel type -->
+                </select>
+                <div class="error-message text-red-500 text-xs hidden" id="load_category-error"></div>
+            </div>
+
+            <!-- Nama Instansi (shown only for dinas) -->
+            <div id="instansi_div" class="space-y-2 hidden">
+                <label for="nama_instansi" class="block text-sm font-medium text-gray-700">Nama Instansi <span class="text-red-500">*</span></label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <i class="fas fa-building text-gray-400"></i>
@@ -29,306 +116,55 @@
                            class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
                            placeholder="Contoh: Dinas Perhubungan">
                 </div>
+                <div class="error-message text-red-500 text-xs hidden" id="nama_instansi-error"></div>
             </div>
 
-
-            <div class="space-y-2">
-                <label for="plat_nomor" class="block text-sm font-medium text-gray-700">Plat Nomor</label>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="fas fa-id-card text-gray-400"></i>
-                    </div>
-                    <input type="text" id="plat_nomor" name="plat_nomor" required
-                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                           placeholder="Contoh: B 1234 CD">
-                </div>
+            <div class="flex items-center justify-between mt-4">
+                <div id="formStatus" class="text-sm"></div>
+                <button type="submit" id="submitBtn"
+                        class="flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    <i class="fas fa-save mr-2"></i> Simpan Data
+                </button>
             </div>
-
-            <div class="space-y-2">
-                <label for="merek" class="block text-sm font-medium text-gray-700">Merek</label>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="fas fa-trademark text-gray-400"></i>
-                    </div>
-                    <input type="text" id="merek" name="merek" required
-                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                           placeholder="Contoh: Toyota">
-                </div>
-            </div>
-
-            <div class="space-y-2">
-                <label for="tipe" class="block text-sm font-medium text-gray-700">Tipe</label>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="fas fa-car-side text-gray-400"></i>
-                    </div>
-                    <input type="text" id="tipe" name="tipe" required
-                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                           placeholder="Contoh: Avanza">
-                </div>
-            </div>
-
-            <div class="space-y-2">
-                <label for="tahun" class="block text-sm font-medium text-gray-700">Tahun</label>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="fas fa-calendar text-gray-400"></i>
-                    </div>
-                    <input type="number" id="tahun" name="tahun" required
-                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                           placeholder="Contoh: 2020">
-                </div>
-
-                <div class="space-y-2">
-                    <label for="fuel_type" class="block text-sm font-medium text-gray-700">Jenis Bahan Bakar</label>
-                    <select id="fuel_type" name="fuel_type" required
-                            class="block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
-                        <option value="petrol">Bensin</option>
-                        <option value="diesel">Solar</option>
-                    </select>
-                </div>
-            </div>
-
-            <div id="loadCategoryDiv" class="space-y-2">
-                <label for="load_category" class="block text-sm font-medium text-gray-700">Kategori Beban Kendaraan</label>
-                <select id="load_category" name="load_category" required
-                        class="block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
-                    <option value="" disabled selected>Pilih Kategori</option>
-                    <option value="kendaraan_muatan">Kendaraan Muatan</option>
-                    <option value="kendaraan_penumpang">Kendaraan Penumpang</option>
-                </select>
-            </div>
-
-            <button type="submit" 
-                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                <i class="fas fa-save mr-2"></i> Simpan Data
-            </button>
         </form>
     </div>
 </div>
 
-<div class="max-w-2xl mx-auto mt-6">
-  <div class="bg-white shadow-lg rounded-lg p-6 space-y-4">
-    <div class="flex items-center mb-4">
-      <i class="fas fa-file-csv text-primary text-2xl mr-3"></i>
-      <h3 class="text-xl font-semibold text-gray-800">Batch Input CSV</h3>
+<div class="max-w-4xl mx-auto mt-6">
+    <div class="bg-white shadow-lg rounded-lg p-6 space-y-4">
+        <div class="flex items-center mb-4">
+            <i class="fas fa-file-csv text-primary text-2xl mr-3"></i>
+            <h3 class="text-xl font-semibold text-gray-800">Batch Input CSV</h3>
+        </div>
+        <div class="text-sm">
+            <p class="mb-2">Gunakan template berikut untuk menginput data kendaraan secara massal:</p>
+            <a href="{{ url_for('vehicles.download_template') }}" class="inline-flex items-center text-primary hover:underline">
+                <i class="fas fa-download mr-1"></i> Download Template CSV
+            </a>
+        </div>
+        <div class="flex flex-col sm:flex-row items-center gap-4 mt-2">
+            <div class="w-full">
+                <label for="batchFile" class="block text-sm font-medium text-gray-700 mb-1">Pilih File CSV</label>
+                <input type="file" id="batchFile" accept=".csv" class="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-primary-dark">
+            </div>
+            <button id="uploadBtn" class="mt-2 sm:mt-7 w-full sm:w-auto flex items-center justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                <i class="fas fa-file-upload mr-2"></i> Upload CSV
+            </button>
+        </div>
+        <!-- Batch upload result area -->
+        <div id="batchResult" class="mt-4 hidden">
+            <div class="flex items-center border-b border-gray-200 pb-2 mb-2">
+                <i class="fas fa-info-circle mr-2 text-primary"></i>
+                <h4 class="font-medium">Hasil Upload</h4>
+            </div>
+            <div id="batchSummary" class="text-sm mb-2"></div>
+            <div id="batchErrors" class="mt-2 max-h-64 overflow-y-auto border rounded p-2 bg-red-50 hidden"></div>
+        </div>
     </div>
-    <a href="{{ url_for('routes.download_template') }}" class="inline-block text-primary hover:underline">Download Template CSV</a>
-    <div class="flex items-center space-x-4 mt-2">
-      <input type="file" id="batchFile" accept=".csv" class="border border-gray-300 rounded p-2">
-      <button id="uploadBtn" class="flex items-center justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-        <i class="fas fa-file-upload mr-2"></i> Upload CSV
-      </button>
-    </div>
-  </div>
 </div>
+{% endblock %}
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const loadCategorySelect = document.getElementById('load_category');
-    const fuelTypeSelect = document.getElementById('fuel_type');
-
-    function updateLoadCategories() {
-        const fuelType = fuelTypeSelect.value;
-        const categories = {
-            petrol: ['kendaraan_muatan', 'kendaraan_penumpang'],
-            diesel: ['<3.5ton', '>=3.5ton']
-        };
-        
-        // Clear existing options
-        loadCategorySelect.innerHTML = '';
-        
-        // Add placeholder option
-        const placeholder = document.createElement('option');
-        placeholder.value = '';
-        placeholder.disabled = true;
-        placeholder.selected = true;
-        placeholder.textContent = 'Pilih Kategori';
-        loadCategorySelect.appendChild(placeholder);
-        
-        // Add new options based on fuel type
-        if (categories[fuelType]) {
-            categories[fuelType].forEach(category => {
-                const option = document.createElement('option');
-                option.value = category;
-                option.textContent = category === '<3.5ton' 
-                    ? 'Kendaraan < 3.5 Ton'
-                    : category === '>=3.5ton' 
-                        ? 'Kendaraan ≥ 3.5 Ton'
-                        : category;
-                loadCategorySelect.appendChild(option);
-            });
-        }
-    }
-
-    // Initialize load categories based on initial fuel type
-    if (fuelTypeSelect) {
-        updateLoadCategories();
-        fuelTypeSelect.addEventListener('change', updateLoadCategories);
-    }
-    const batchFileInput = document.getElementById('batchFile');
-    const uploadBtn = document.getElementById('uploadBtn');
-    if (uploadBtn) {
-      uploadBtn.addEventListener('click', async function() {
-        const file = batchFileInput.files[0];
-        if (!file) { showToast('Pilih file CSV terlebih dahulu.', 'error'); return; }
-        const formData = new FormData(); formData.append('file', file);
-        try {
-          const res = await fetch('/api/kendaraan/batch-upload', { method: 'POST', body: formData });
-          const result = await res.json();
-          if (res.ok) {
-            let msg = `Berhasil: ${result.successes} kendaraan`;
-            if (result.errors.length) {
-                msg += `; ${result.errors.length} kendaraan gagal`;
-                // Create a detailed error message
-                const errorDetails = document.createElement('div');
-                errorDetails.className = 'mt-2 max-h-64 overflow-y-auto border rounded p-2 bg-red-50';
-                errorDetails.innerHTML = '<h4 class="font-semibold mb-2">Detail Kesalahan:</h4>';
-                result.errors.forEach(error => {
-                    const errorItem = document.createElement('p');
-                    errorItem.className = 'text-sm text-red-700 mb-1';
-                    errorItem.textContent = `Baris ${error.row}: ${error.error}`;
-                    errorDetails.appendChild(errorItem);
-                });
-                document.body.appendChild(errorDetails);
-                // Auto-scroll to error details
-                errorDetails.scrollIntoView({ behavior: 'smooth' });
-            }
-            showToast(msg, 'success');
-          } else {
-            showToast(result.error || 'Gagal upload CSV.', 'error');
-          }
-        } catch (e) {
-          console.error(e);
-          showToast('Terjadi kesalahan saat upload.', 'error');
-        }
-      });
-    }
-    const jenisSelect = document.getElementById('jenis');
-    const instansiDiv = document.getElementById('instansi_div');
-    const instansiInput = document.getElementById('nama_instansi');
-    const kendaraanForm = document.getElementById('kendaraanForm');
-
-    function updateInstansiFieldVisibility() {
-        if (jenisSelect.value === 'dinas') {
-            instansiDiv.style.display = 'block';
-            if (instansiInput.value === '-') { // Jika sebelumnya diset ke placeholder '-' (misal dari pilihan 'Umum')
-                instansiInput.value = '';      // Kosongkan agar pengguna bisa input nama instansi
-            }
-            instansiInput.setAttribute('required', 'required');
-        } else {
-            instansiDiv.style.display = 'none';
-            instansiInput.value = '-'; // Set to hyphen when hidden or for 'Umum'
-            instansiInput.removeAttribute('required');
-        }
-    }
-
-    if (jenisSelect && instansiDiv && instansiInput) {
-        // Initial setup in case of page reload with a value selected
-        updateInstansiFieldVisibility();
-        
-        jenisSelect.addEventListener('change', updateInstansiFieldVisibility);
-    }
-
-    if (kendaraanForm) {
-        kendaraanForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            // Validate all required fields
-            const requiredFields = ['jenis', 'plat_nomor', 'merek', 'tipe', 'tahun', 'fuel_type', 'load_category'];
-            const formData = new FormData(this);
-            const missingFields = requiredFields.filter(field => !formData.get(field));
-            if (missingFields.length > 0) {
-                showToast(`Field ${missingFields.join(', ')} tidak boleh kosong`, 'error');
-                return;
-            }
-
-            // Additional check for 'nama_instansi' if 'dinas' is selected
-            if (jenisSelect.value === 'dinas' && !instansiInput.value.trim()) {
-                showToast('Nama Instansi wajib diisi untuk jenis kendaraan Dinas.', 'error');
-                instansiInput.focus();
-                return; 
-            }
-
-            // Get form data
-            const data = {
-                jenis: formData.get('jenis'),
-                plat_nomor: formData.get('plat_nomor'),
-                merek: formData.get('merek'),
-                tipe: formData.get('tipe'),
-                tahun: formData.get('tahun'),
-                fuel_type: formData.get('fuel_type'),
-                nama_instansi: formData.get('nama_instansi') || '-',
-                load_category: formData.get('load_category')
-            };
-            
-            // Validate fuel type
-            if (!['petrol', 'diesel'].includes(data.fuel_type)) {
-                showToast('Jenis bahan bakar tidak valid', 'error');
-                return;
-            }
-
-            // Validate load category
-            const loadCategory = formData.get('load_category');
-            if (!loadCategory) {
-                showToast('Kategori beban wajib dipilih', 'error');
-                return;
-            }
-            
-            // Validate load category based on fuel type
-            const validCategories = {
-                petrol: ['kendaraan_muatan', 'kendaraan_penumpang'],
-                diesel: ['<3.5ton', '>=3.5ton']
-            };
-            if (!validCategories[data.fuel_type].includes(loadCategory)) {
-                showToast(`Kategori beban tidak valid untuk ${data.fuel_type === 'petrol' ? 'bensin' : 'solar'}`,
-                         'error');
-                return;
-            }
-
-            try {
-                // Validate plate number format
-                const plat = data.plat_nomor.trim().toUpperCase();
-                if (plat.length < 4) {
-                    showToast('Format nomor polisi tidak valid', 'error');
-                    return;
-                }
-
-                // Validate year
-                const tahun = parseInt(data.tahun);
-                if (isNaN(tahun) || tahun < 1900 || tahun > 2100) {
-                    showToast('Tahun tidak valid', 'error');
-                    return;
-                }
-
-                // Send request
-                const response = await fetch('/api/kendaraan', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        ...data,
-                        plat_nomor: plat,
-                        tahun: tahun
-                    })
-                });
-
-                const result = await response.json();
-                if (response.ok && result.success) {
-                    showToast('Data kendaraan berhasil disimpan!', 'success');
-                    this.reset(); // Resets form fields
-                    updateInstansiFieldVisibility(); // Update visibility after reset
-                } else {
-                    const errorMsg = result.error || 'Gagal menyimpan data kendaraan.';
-                    showToast(errorMsg, 'error');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showToast('Terjadi kesalahan saat menyimpan data.', 'error');
-            }
-        });
-    }
-});
-</script>
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script src="{{ url_for('static', filename='js/halaman1.js') }}"></script>
 {% endblock %}
