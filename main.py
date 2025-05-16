@@ -1,6 +1,6 @@
 import os
 import logging
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 from app_init import app, create_app
 from extensions import db
 from models import Kendaraan, HasilUji, User, Config
@@ -50,12 +50,12 @@ def init_db():
             config = Config.query.first()
             if not config:
                 config = Config(
-                    co_max=0.5,
-                    co2_min=8.0,
-                    hc_max=200.0,
-                    o2_min=2.0,
-                    lambda_min=0.95,
-                    lambda_max=1.05
+                    gasoline_co_max=0.5,
+                    gasoline_hc_max=200.0,
+                    gasoline_co2_max=12.0,
+                    gasoline_o2_max=1.0,
+                    gasoline_lambda_max=1.05,
+                    diesel_opacity_max=50.0
                 )
                 db.session.add(config)
                 db.session.commit()
@@ -109,12 +109,35 @@ def init_db():
         db.session.commit()
         logger.info('Database initialized with default data')
         
-        # Ensure nama_instansi column exists for existing DB
+        # Ensure required columns exist for existing DB
         inspector_obj = inspect(db.engine)
         cols = [col['name'] for col in inspector_obj.get_columns('kendaraan')]
+        
+        # Add nama_instansi column if missing
         if 'nama_instansi' not in cols:
             db.engine.execute('ALTER TABLE kendaraan ADD COLUMN nama_instansi VARCHAR(100)')
+            
+        # Add load_category column if missing
+        if 'load_category' not in cols:
+            db.engine.execute('ALTER TABLE kendaraan ADD COLUMN load_category VARCHAR(20) NOT NULL')
+            
+        # Add default value for existing records if load_category is missing
+        if 'load_category' in cols:
+            # Check if there are any NULL values in load_category
+            result = db.session.execute(text('SELECT COUNT(*) FROM kendaraan WHERE load_category IS NULL')).first()
+            if result[0] > 0:
+                # Update NULL values with a default value based on fuel_type
+                db.session.execute(text("""
+                    UPDATE kendaraan
+                    SET load_category = CASE 
+                        WHEN fuel_type = 'petrol' THEN 'kendaraan_penumpang'
+                        WHEN fuel_type = 'diesel' THEN '<3.5ton'
+                        ELSE 'kendaraan_penumpang'
+                    END
+                    WHERE load_category IS NULL
+                """))
+                db.session.commit()
 
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True)
+    app.run(debug=True, port=5001)

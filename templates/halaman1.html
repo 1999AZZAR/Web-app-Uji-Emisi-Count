@@ -78,6 +78,25 @@
                            class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
                            placeholder="Contoh: 2020">
                 </div>
+
+                <div class="space-y-2">
+                    <label for="fuel_type" class="block text-sm font-medium text-gray-700">Jenis Bahan Bakar</label>
+                    <select id="fuel_type" name="fuel_type" required
+                            class="block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                        <option value="petrol">Bensin</option>
+                        <option value="diesel">Solar</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="loadCategoryDiv" class="space-y-2">
+                <label for="load_category" class="block text-sm font-medium text-gray-700">Kategori Beban Kendaraan</label>
+                <select id="load_category" name="load_category" required
+                        class="block w-full pl-3 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    <option value="" disabled selected>Pilih Kategori</option>
+                    <option value="kendaraan_muatan">Kendaraan Muatan</option>
+                    <option value="kendaraan_penumpang">Kendaraan Penumpang</option>
+                </select>
             </div>
 
             <button type="submit" 
@@ -106,6 +125,47 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const loadCategorySelect = document.getElementById('load_category');
+    const fuelTypeSelect = document.getElementById('fuel_type');
+
+    function updateLoadCategories() {
+        const fuelType = fuelTypeSelect.value;
+        const categories = {
+            petrol: ['kendaraan_muatan', 'kendaraan_penumpang'],
+            diesel: ['<3.5ton', '>=3.5ton']
+        };
+        
+        // Clear existing options
+        loadCategorySelect.innerHTML = '';
+        
+        // Add placeholder option
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.disabled = true;
+        placeholder.selected = true;
+        placeholder.textContent = 'Pilih Kategori';
+        loadCategorySelect.appendChild(placeholder);
+        
+        // Add new options based on fuel type
+        if (categories[fuelType]) {
+            categories[fuelType].forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category === '<3.5ton' 
+                    ? 'Kendaraan < 3.5 Ton'
+                    : category === '>=3.5ton' 
+                        ? 'Kendaraan ≥ 3.5 Ton'
+                        : category;
+                loadCategorySelect.appendChild(option);
+            });
+        }
+    }
+
+    // Initialize load categories based on initial fuel type
+    if (fuelTypeSelect) {
+        updateLoadCategories();
+        fuelTypeSelect.addEventListener('change', updateLoadCategories);
+    }
     const batchFileInput = document.getElementById('batchFile');
     const uploadBtn = document.getElementById('uploadBtn');
     if (uploadBtn) {
@@ -117,8 +177,23 @@ document.addEventListener('DOMContentLoaded', function() {
           const res = await fetch('/api/kendaraan/batch-upload', { method: 'POST', body: formData });
           const result = await res.json();
           if (res.ok) {
-            let msg = `Berhasil: ${result.successes}`;
-            if (result.errors.length) msg += `; Gagal: ${result.errors.length}`;
+            let msg = `Berhasil: ${result.successes} kendaraan`;
+            if (result.errors.length) {
+                msg += `; ${result.errors.length} kendaraan gagal`;
+                // Create a detailed error message
+                const errorDetails = document.createElement('div');
+                errorDetails.className = 'mt-2 max-h-64 overflow-y-auto border rounded p-2 bg-red-50';
+                errorDetails.innerHTML = '<h4 class="font-semibold mb-2">Detail Kesalahan:</h4>';
+                result.errors.forEach(error => {
+                    const errorItem = document.createElement('p');
+                    errorItem.className = 'text-sm text-red-700 mb-1';
+                    errorItem.textContent = `Baris ${error.row}: ${error.error}`;
+                    errorDetails.appendChild(errorItem);
+                });
+                document.body.appendChild(errorDetails);
+                // Auto-scroll to error details
+                errorDetails.scrollIntoView({ behavior: 'smooth' });
+            }
             showToast(msg, 'success');
           } else {
             showToast(result.error || 'Gagal upload CSV.', 'error');
@@ -159,6 +234,15 @@ document.addEventListener('DOMContentLoaded', function() {
         kendaraanForm.addEventListener('submit', async function(e) {
             e.preventDefault();
 
+            // Validate all required fields
+            const requiredFields = ['jenis', 'plat_nomor', 'merek', 'tipe', 'tahun', 'fuel_type', 'load_category'];
+            const formData = new FormData(this);
+            const missingFields = requiredFields.filter(field => !formData.get(field));
+            if (missingFields.length > 0) {
+                showToast(`Field ${missingFields.join(', ')} tidak boleh kosong`, 'error');
+                return;
+            }
+
             // Additional check for 'nama_instansi' if 'dinas' is selected
             if (jenisSelect.value === 'dinas' && !instansiInput.value.trim()) {
                 showToast('Nama Instansi wajib diisi untuk jenis kendaraan Dinas.', 'error');
@@ -166,19 +250,68 @@ document.addEventListener('DOMContentLoaded', function() {
                 return; 
             }
 
-            const formData = new FormData(this);
-            const data = {};
-            for (let [key, value] of formData.entries()) {
-                data[key] = value;
+            // Get form data
+            const data = {
+                jenis: formData.get('jenis'),
+                plat_nomor: formData.get('plat_nomor'),
+                merek: formData.get('merek'),
+                tipe: formData.get('tipe'),
+                tahun: formData.get('tahun'),
+                fuel_type: formData.get('fuel_type'),
+                nama_instansi: formData.get('nama_instansi') || '-',
+                load_category: formData.get('load_category')
+            };
+            
+            // Validate fuel type
+            if (!['petrol', 'diesel'].includes(data.fuel_type)) {
+                showToast('Jenis bahan bakar tidak valid', 'error');
+                return;
+            }
+
+            // Validate load category
+            const loadCategory = formData.get('load_category');
+            if (!loadCategory) {
+                showToast('Kategori beban wajib dipilih', 'error');
+                return;
+            }
+            
+            // Validate load category based on fuel type
+            const validCategories = {
+                petrol: ['kendaraan_muatan', 'kendaraan_penumpang'],
+                diesel: ['<3.5ton', '>=3.5ton']
+            };
+            if (!validCategories[data.fuel_type].includes(loadCategory)) {
+                showToast(`Kategori beban tidak valid untuk ${data.fuel_type === 'petrol' ? 'bensin' : 'solar'}`,
+                         'error');
+                return;
             }
 
             try {
+                // Validate plate number format
+                const plat = data.plat_nomor.trim().toUpperCase();
+                if (plat.length < 4) {
+                    showToast('Format nomor polisi tidak valid', 'error');
+                    return;
+                }
+
+                // Validate year
+                const tahun = parseInt(data.tahun);
+                if (isNaN(tahun) || tahun < 1900 || tahun > 2100) {
+                    showToast('Tahun tidak valid', 'error');
+                    return;
+                }
+
+                // Send request
                 const response = await fetch('/api/kendaraan', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify({
+                        ...data,
+                        plat_nomor: plat,
+                        tahun: tahun
+                    })
                 });
 
                 const result = await response.json();

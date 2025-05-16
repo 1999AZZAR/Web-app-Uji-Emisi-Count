@@ -70,12 +70,15 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Merek</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tahun</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Bahan Bakar</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori Beban</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Instansi</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CO</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CO2</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">HC</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">O2</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lambda</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opacity</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valid</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lulus</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
@@ -91,12 +94,36 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.kendaraan.merek }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.kendaraan.tipe }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.kendaraan.tahun }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {% if item.kendaraan.fuel_type == 'diesel' %}
+                                Diesel
+                            {% else %}
+                                Bensin
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {% if item.kendaraan.fuel_type == 'diesel' %}
+                                {% if item.kendaraan.load_category == '<3.5ton' %}
+                                    < 3.5 Ton
+                                {% else %}
+                                    ≥ 3.5 Ton
+                                {% endif %}
+                            {% else %}
+                                {% if item.kendaraan.load_category == 'kendaraan_muatan' %}
+                                    Kendaraan Muatan
+                                {% else %}
+                                    Kendaraan Penumpang
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.kendaraan.nama_instansi }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.1f"|format(item.hasil.co) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.1f"|format(item.hasil.co2) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.1f"|format(item.hasil.hc) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.1f"|format(item.hasil.o2) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.2f"|format(item.hasil.lambda_val) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.2f"|format(item.hasil.co) if item.hasil.co is not none else '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.2f"|format(item.hasil.co2) if item.hasil.co2 is not none else '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.hasil.hc if item.hasil.hc is not none else '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.2f"|format(item.hasil.o2) if item.hasil.o2 is not none else '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.2f"|format(item.hasil.lambda_val) if item.hasil.lambda_val is not none else '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.1f"|format(item.hasil.opacity) if item.hasil.opacity is not none else '-' }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if item.hasil.valid %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
                                 {{ item.hasil.valid }}

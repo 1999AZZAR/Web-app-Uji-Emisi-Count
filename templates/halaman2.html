@@ -45,15 +45,35 @@
           <form id="hasilUjiForm" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <!-- CO Field -->
-              <div><label for="co" class="block text-sm text-gray-700">CO (%)</label><input id="co" type="number" step="0.01" class="w-full border rounded p-2"></div>
+              <div class="form-field">
+                <label for="co" class="block text-sm text-gray-700">CO (%)</label>
+                <input id="co" type="number" step="0.01" class="w-full border rounded p-2">
+              </div>
               <!-- CO2 Field -->
-              <div><label for="co2" class="block text-sm text-gray-700">CO2 (%)</label><input id="co2" type="number" step="0.01" class="w-full border rounded p-2"></div>
+              <div class="form-field">
+                <label for="co2" class="block text-sm text-gray-700">CO2 (%)</label>
+                <input id="co2" type="number" step="0.01" class="w-full border rounded p-2">
+              </div>
               <!-- HC Field -->
-              <div><label for="hc" class="block text-sm text-gray-700">HC (ppm)</label><input id="hc" type="number" class="w-full border rounded p-2"></div>
+              <div class="form-field">
+                <label for="hc" class="block text-sm text-gray-700">HC (ppm)</label>
+                <input id="hc" type="number" class="w-full border rounded p-2">
+              </div>
               <!-- O2 Field -->
-              <div><label for="o2" class="block text-sm text-gray-700">O2 (%)</label><input id="o2" type="number" step="0.01" class="w-full border rounded p-2"></div>
+              <div class="form-field">
+                <label for="o2" class="block text-sm text-gray-700">O2 (%)</label>
+                <input id="o2" type="number" step="0.01" class="w-full border rounded p-2">
+              </div>
               <!-- Lambda Field -->
-              <div><label for="lambda" class="block text-sm text-gray-700">Lambda</label><input id="lambda" type="number" step="0.01" class="w-full border rounded p-2"></div>
+              <div class="form-field">
+                <label for="lambda" class="block text-sm text-gray-700">Lambda</label>
+                <input id="lambda" type="number" step="0.01" class="w-full border rounded p-2">
+              </div>
+              <!-- Opacity Field (initially hidden, shown only for diesel) -->
+              <div id="opacityField" class="form-field hidden">
+                <label for="opacity" class="block text-sm text-gray-700">Opasitas (%)</label>
+                <input id="opacity" type="number" step="0.1" class="w-full border rounded p-2" min="0">
+              </div>
             </div>
             <button type="submit" class="w-full bg-primary text-white py-2 rounded mt-4">Simpan Hasil</button>
             <button id="clearBtn" type="button" class="w-full bg-red-500 text-white py-2 rounded hidden mt-2">Hapus Data Uji</button>
