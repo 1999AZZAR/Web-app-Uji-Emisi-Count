@@ -1,64 +1,101 @@
 {% extends "base.html" %}
 
-{% block content %}
-<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-        <div>
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Login
-            </h2>
-        </div>
-        <form class="mt-8 space-y-6" method="POST">
-            <div class="rounded-md shadow-sm -space-y-px">
-                <div>
-                    <label for="username" class="sr-only">Username</label>
-                    <input id="username" name="username" type="text" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="Username">
-                </div>
-                <div>
-                    <label for="password" class="sr-only">Password</label>
-                    <input id="password" name="password" type="password" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="Password">
-                </div>
-            </div>
+{% block title %}Login - Aplikasi Uji Emisi{% endblock %}
 
-            <div>
-                <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    Sign in
-                </button>
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="bg-white shadow-xl rounded-xl overflow-hidden mt-12 transform hover:scale-[1.01] transition-all duration-300">
+        <div class="text-center py-8 bg-primary-50 border-b border-primary-100">
+            <div class="text-6xl text-primary-600 mb-4 drop-shadow-md">
+                <i class="fas fa-car-side"></i>
             </div>
-        </form>
+            <h1 class="text-2xl font-bold text-primary-900">Aplikasi Uji Emisi</h1>
+            <p class="text-primary-600 mt-2 text-sm">Sistem Pengujian Emisi Kendaraan</p>
+        </div>
+        <div class="p-8">
+            <h2 class="text-xl font-semibold text-center text-gray-800 mb-8">Login</h2>
+            
+            <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-user text-primary-400"></i>
+                        </div>
+                        <input type="text" id="username" name="username" required
+                               class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
+                               placeholder="Enter your username">
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-primary-400"></i>
+                        </div>
+                        <input type="password" id="password" name="password" required
+                               class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
+                               placeholder="Enter your password">
+                    </div>
+                </div>
+                
+                <div class="mt-8">
+                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login
+                    </button>
+                </div>
+            </form>
+            
+            <div class="mt-6 pt-4 text-center text-xs text-gray-500 border-t border-gray-100">
+                <p>© {{ now.year if now else '2023' }} Aplikasi Uji Emisi</p>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('form');
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
+    document.addEventListener('DOMContentLoaded', function() {
+        // Focus on username field
+        document.getElementById('username').focus();
         
-        fetch('/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
-        })
-        .then(response => {
-            if (response.ok) {
-                showToast('Login berhasil!', 'success');
-                setTimeout(() => window.location.href = '/halaman1', 1000);
+        // Simple form validation
+        const form = document.querySelector('form');
+        const usernameField = document.getElementById('username');
+        const passwordField = document.getElementById('password');
+        
+        form.addEventListener('submit', function(e) {
+            let valid = true;
+            
+            if (!usernameField.value.trim()) {
+                usernameField.classList.add('border-danger-500', 'ring-danger-200');
+                valid = false;
             } else {
-                showToast('Username atau password salah', 'error');
+                usernameField.classList.remove('border-danger-500', 'ring-danger-200');
             }
-        })
-        .catch(error => {
-            showToast('Terjadi kesalahan saat login', 'error');
-            console.error('Login error:', error);
+            
+            if (!passwordField.value) {
+                passwordField.classList.add('border-danger-500', 'ring-danger-200');
+                valid = false;
+            } else {
+                passwordField.classList.remove('border-danger-500', 'ring-danger-200');
+            }
+            
+            if (!valid) {
+                e.preventDefault();
+            }
+        });
+        
+        // Remove error styling on input
+        [usernameField, passwordField].forEach(field => {
+            field.addEventListener('input', function() {
+                this.classList.remove('border-danger-500', 'ring-danger-200');
+            });
         });
     });
-});
 </script>
 {% endblock %}

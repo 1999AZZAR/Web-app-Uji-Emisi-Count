@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - Aplikasi Uji Emisi{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
+        <h1 class="text-2xl font-bold text-gray-800 flex items-center">
+            <i class="fas fa-users text-primary mr-3"></i>
+            User Management
+        </h1>
+        <button id="show-add-modal" class="mt-4 md:mt-0 bg-primary hover:bg-primary-700 text-white py-2 px-4 rounded-md flex items-center transition-colors">
+            <i class="fas fa-plus-circle mr-2"></i>
+            Add New User
+        </button>
+    </div>
+    
+    <!-- Users List -->
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="p-6">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for user in users %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ user.username }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ user.fullname or '-' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if user.is_admin() %}bg-purple-100 text-purple-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                                    {{ 'Administrator' if user.is_admin() else 'Operator' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ user.last_login.strftime('%d %b %Y %H:%M') if user.last_login else 'Never' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-2">
+                                    <button class="edit-user text-primary hover:text-primary-700" data-id="{{ user.id }}">
+                                        <i class="fas fa-edit"></i>
+                                        <span class="sr-only">Edit</span>
+                                    </button>
+                                    <button class="delete-user text-danger hover:text-danger-700" data-id="{{ user.id }}">
+                                        <i class="fas fa-trash-alt"></i>
+                                        <span class="sr-only">Delete</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                                No users found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add User Modal -->
+    <div id="add-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-medium text-gray-900">Add New User</h3>
+                <button class="close-modal text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="add-user-form" method="POST" action="{{ url_for('auth.add_user') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="px-6 py-4 space-y-4">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                        <input type="text" id="username" name="username" required 
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                               placeholder="Enter username">
+                    </div>
+                    
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="password" name="password" required
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                               placeholder="Enter password">
+                    </div>
+                    
+                    <div>
+                        <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                        <input type="password" id="confirm_password" name="confirm_password" required
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                               placeholder="Confirm password">
+                        <div id="password-match-error" class="text-danger text-xs mt-1 hidden">Passwords do not match</div>
+                    </div>
+                    
+                    <div>
+                        <label for="fullname" class="block text-sm font-medium text-gray-700 mb-1">Full Name <span class="text-gray-400">(Optional)</span></label>
+                        <input type="text" id="fullname" name="fullname"
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                               placeholder="Enter full name">
+                    </div>
+                    
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="email" name="email" required
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                               placeholder="Enter email address">
+                    </div>
+                    
+                    <div>
+                        <label for="is_admin" class="inline-flex items-center">
+                            <input type="checkbox" id="is_admin" name="is_admin" class="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4">
+                            <span class="ml-2 text-sm text-gray-700">Administrator Role</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3 rounded-b-lg">
+                    <button type="button" class="close-modal py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none">
+                        Cancel
+                    </button>
+                    <button type="submit" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-700 focus:outline-none">
+                        Add User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Edit User Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-medium text-gray-900">Edit User</h3>
+                <button class="close-modal text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="edit-user-form" method="POST" action="/users/0/update">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" id="edit-user-id" name="user_id" value="">
+                <div class="px-6 py-4 space-y-4">
+                    <div>
+                        <label for="edit-username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                        <input type="text" id="edit-username" name="username" required 
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                               placeholder="Enter username" readonly>
+                        <p class="text-xs text-gray-500 mt-1">Username cannot be changed</p>
+                    </div>
+                    
+                    <div>
+                        <label for="edit-password" class="block text-sm font-medium text-gray-700 mb-1">New Password <span class="text-gray-400">(Leave blank to keep current)</span></label>
+                        <input type="password" id="edit-password" name="password"
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                               placeholder="Enter new password">
+                    </div>
+                    
+                    <div>
+                        <label for="edit-confirm-password" class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                        <input type="password" id="edit-confirm-password" name="confirm_password"
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                               placeholder="Confirm new password">
+                        <div id="edit-password-match-error" class="text-danger text-xs mt-1 hidden">Passwords do not match</div>
+                    </div>
+                    
+                    <div>
+                        <label for="edit-fullname" class="block text-sm font-medium text-gray-700 mb-1">Full Name <span class="text-gray-400">(Optional)</span></label>
+                        <input type="text" id="edit-fullname" name="fullname"
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                               placeholder="Enter full name">
+                    </div>
+                    
+                    <div>
+                        <label for="edit-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="edit-email" name="email" required
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                               placeholder="Enter email address">
+                    </div>
+                    
+                    <div>
+                        <label for="edit-is-admin" class="inline-flex items-center">
+                            <input type="checkbox" id="edit-is-admin" name="is_admin" class="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4">
+                            <span class="ml-2 text-sm text-gray-700">Administrator Role</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3 rounded-b-lg">
+                    <button type="button" class="close-modal py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none">
+                        Cancel
+                    </button>
+                    <button type="submit" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-700 focus:outline-none">
+                        Update User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-medium text-gray-900">Delete User</h3>
+                <button class="close-modal text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="px-6 py-4">
+                <div class="flex items-center mb-4 text-danger">
+                    <div class="rounded-full bg-danger-100 p-2 mr-3">
+                        <i class="fas fa-exclamation-triangle text-danger"></i>
+                    </div>
+                    <p class="text-danger-800 font-medium">Warning: This action cannot be undone</p>
+                </div>
+                <p class="text-gray-700">
+                    Are you sure you want to delete the user "<span id="delete-user-name" class="font-semibold"></span>"?
+                    This will permanently remove the user account and associated information.
+                </p>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3 rounded-b-lg">
+                <button id="cancel-delete" class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none">
+                    Cancel
+                </button>
+                <form id="delete-user-form" method="POST" action="/users/0/delete">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" id="delete-user-id" name="user_id" value="">
+                    <button type="submit" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-danger hover:bg-danger-700 focus:outline-none">
+                        Delete User
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script src="{{ url_for('static', filename='js/users.js') }}"></script>
+{% endblock %} 

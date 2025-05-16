@@ -1,6 +1,4 @@
-#!/bin/sh
-'''exec' "/home/himawan/Documents/Learning/Web app Uji Emisi Count/.venv/bin/python" "$0" "$@"
-' '''
+#!/home/azzar/Downloads/project/Web-app-Uji-Emisi-Count/.venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

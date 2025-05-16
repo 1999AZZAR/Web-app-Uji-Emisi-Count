@@ -30,10 +30,14 @@
       <div id="loadMoreContainer" class="flex justify-center mt-4 hidden">
         <button id="loadMoreBtn" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition">Load More</button>
       </div>
+      
       <!-- Modal for test input -->
-      <div id="testModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+      <div id="testModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
         <div class="bg-white shadow-lg rounded-lg overflow-hidden p-6 space-y-6 relative w-11/12 max-w-md">
-          <button id="modalClose" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+          <button id="modalClose" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl focus:outline-none">
+            <i class="fas fa-times"></i>
+          </button>
+          
           <div id="kendaraan_info" class="mb-4">
             <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-lg">
               <div class="flex items-center">
@@ -42,42 +46,48 @@
               </div>
             </div>
           </div>
+          
           <form id="hasilUjiForm" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <!-- CO Field -->
               <div class="form-field">
-                <label for="co" class="block text-sm text-gray-700">CO (%)</label>
-                <input id="co" type="number" step="0.01" class="w-full border rounded p-2">
+                <label for="co" class="block text-sm font-medium text-gray-700 mb-1">CO (%)</label>
+                <input id="co" type="number" step="0.01" class="w-full border rounded p-2 focus:ring-primary focus:border-primary" placeholder="0.00">
               </div>
               <!-- CO2 Field -->
               <div class="form-field">
-                <label for="co2" class="block text-sm text-gray-700">CO2 (%)</label>
-                <input id="co2" type="number" step="0.01" class="w-full border rounded p-2">
+                <label for="co2" class="block text-sm font-medium text-gray-700 mb-1">CO2 (%)</label>
+                <input id="co2" type="number" step="0.01" class="w-full border rounded p-2 focus:ring-primary focus:border-primary" placeholder="0.00">
               </div>
               <!-- HC Field -->
               <div class="form-field">
-                <label for="hc" class="block text-sm text-gray-700">HC (ppm)</label>
-                <input id="hc" type="number" class="w-full border rounded p-2">
+                <label for="hc" class="block text-sm font-medium text-gray-700 mb-1">HC (ppm)</label>
+                <input id="hc" type="number" class="w-full border rounded p-2 focus:ring-primary focus:border-primary" placeholder="0">
               </div>
               <!-- O2 Field -->
               <div class="form-field">
-                <label for="o2" class="block text-sm text-gray-700">O2 (%)</label>
-                <input id="o2" type="number" step="0.01" class="w-full border rounded p-2">
+                <label for="o2" class="block text-sm font-medium text-gray-700 mb-1">O2 (%)</label>
+                <input id="o2" type="number" step="0.01" class="w-full border rounded p-2 focus:ring-primary focus:border-primary" placeholder="0.00">
               </div>
               <!-- Lambda Field -->
               <div class="form-field">
-                <label for="lambda" class="block text-sm text-gray-700">Lambda</label>
-                <input id="lambda" type="number" step="0.01" class="w-full border rounded p-2">
+                <label for="lambda" class="block text-sm font-medium text-gray-700 mb-1">Lambda</label>
+                <input id="lambda" type="number" step="0.01" class="w-full border rounded p-2 focus:ring-primary focus:border-primary" placeholder="0.00">
               </div>
               <!-- Opacity Field (initially hidden, shown only for diesel) -->
               <div id="opacityField" class="form-field hidden">
-                <label for="opacity" class="block text-sm text-gray-700">Opasitas (%)</label>
-                <input id="opacity" type="number" step="0.1" class="w-full border rounded p-2" min="0">
+                <label for="opacity" class="block text-sm font-medium text-gray-700 mb-1">Opasitas (%)</label>
+                <input id="opacity" type="number" step="0.1" class="w-full border rounded p-2 focus:ring-primary focus:border-primary" min="0" placeholder="0.0">
               </div>
             </div>
-            <button type="submit" class="w-full bg-primary text-white py-2 rounded mt-4">Simpan Hasil</button>
-            <button id="clearBtn" type="button" class="w-full bg-red-500 text-white py-2 rounded hidden mt-2">Hapus Data Uji</button>
+            <button type="submit" class="w-full bg-primary text-white py-2 rounded mt-4 hover:bg-primary-dark transition-colors">
+              Simpan Hasil
+            </button>
+            <button id="clearBtn" type="button" class="w-full bg-red-500 text-white py-2 rounded hidden mt-2 hover:bg-red-600 transition-colors">
+              Hapus Data Uji
+            </button>
           </form>
+          
           <div id="hasil" class="mt-4 space-y-2 hidden">
             <h3 class="text-lg font-semibold">Hasil Pengujian:</h3>
             <div id="validasi" class="p-2 rounded bg-gray-100"></div>
@@ -85,19 +95,30 @@
           </div>
         </div>
       </div>
+      
       <!-- Confirm delete vehicle Modal -->
-      <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+      <div id="confirmModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
         <div class="bg-white shadow-lg rounded-lg p-6 relative w-11/12 max-w-sm">
-          <button id="confirmClose" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+          <button id="confirmClose" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl focus:outline-none">
+            <i class="fas fa-times"></i>
+          </button>
+          <div class="flex items-center mb-4 text-red-600">
+            <i class="fas fa-exclamation-triangle mr-2 text-xl"></i>
+            <h3 class="font-medium">Konfirmasi</h3>
+          </div>
           <p id="confirmText" class="text-gray-800 mb-4">Anda yakin?</p>
           <div class="flex justify-end space-x-4">
-            <button id="confirmNo" class="py-1 px-4 bg-gray-300 rounded">Batal</button>
-            <button id="confirmYes" class="py-1 px-4 bg-red-500 text-white rounded">Hapus</button>
+            <button id="confirmNo" class="py-1 px-4 bg-gray-300 rounded hover:bg-gray-400 transition-colors">
+              Batal
+            </button>
+            <button id="confirmYes" class="py-1 px-4 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
+              Hapus
+            </button>
           </div>
         </div>
       </div>
-      <!-- Test form and results will be handled dynamically -->
     </div>
   </div>
+  <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
   <script src="{{ url_for('static', filename='js/halaman2.js') }}"></script>
 {% endblock %}
