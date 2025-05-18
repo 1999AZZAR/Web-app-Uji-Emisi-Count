@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const instansiInput = document.getElementById('nama_instansi');
     const kendaraanForm = document.getElementById('kendaraanForm');
     const submitBtn = document.getElementById('submitBtn');
-    const formStatus = document.getElementById('formStatus');
     const errorElements = document.querySelectorAll('.error-message');
 
     // Define load categories based on fuel type
@@ -128,8 +127,6 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.disabled = true;
             const originalBtnText = submitBtn.innerHTML;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Menyimpan...';
-            formStatus.textContent = '';
-            formStatus.className = 'text-sm';
             
             try {
                 // Validate all required fields
@@ -210,21 +207,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 const result = await response.json();
                 
                 if (response.ok && result.success) {
-                    // Show success message
-                    formStatus.textContent = 'Data kendaraan berhasil disimpan!';
-                    formStatus.className = 'text-sm text-green-600';
+                    // Use toast notification instead of inline status
+                    showToast('Data kendaraan berhasil disimpan!', 'success');
                     
                     // Reset form
                     this.reset();
                     updateLoadCategories();
                     updateInstansiFieldVisibility();
-                    
-                    // Optionally redirect after success
-                    // window.location.href = '/halaman2';
                 } else {
                     const errorMsg = result.error || 'Gagal menyimpan data kendaraan.';
-                    formStatus.textContent = errorMsg;
-                    formStatus.className = 'text-sm text-red-600';
+                    showToast(errorMsg, 'error');
                     
                     // If error is about duplicate plate number
                     if (response.status === 409) {
@@ -233,8 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } catch (error) {
                 console.error('Error:', error);
-                formStatus.textContent = 'Terjadi kesalahan saat menyimpan data.';
-                formStatus.className = 'text-sm text-red-600';
+                showToast('Terjadi kesalahan saat menyimpan data.', 'error');
             } finally {
                 // Re-enable submit button
                 submitBtn.disabled = false;
@@ -303,12 +294,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     batchSummary.textContent = summaryMsg;
                     batchSummary.className = 'text-sm bg-green-100 p-2 rounded';
                     
+                    // Also show toast notification for successful uploads
+                    showToast(summaryMsg, 'success');
+                    
                     // Reset file input
                     batchFileInput.value = '';
                 } else {
-                    batchSummary.textContent = result.error || 'Gagal upload CSV.';
+                    const errorMsg = result.error || 'Gagal upload CSV.';
+                    batchSummary.textContent = errorMsg;
                     batchSummary.className = 'text-sm bg-red-100 p-2 rounded';
                     batchErrors.classList.add('hidden');
+                    
+                    // Show toast notification for error
+                    showToast(errorMsg, 'error');
                 }
             } catch (e) {
                 console.error(e);
@@ -316,6 +314,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 batchSummary.textContent = 'Terjadi kesalahan saat upload.';
                 batchSummary.className = 'text-sm bg-red-100 p-2 rounded';
                 batchErrors.classList.add('hidden');
+                
+                // Show toast notification for error
+                showToast('Terjadi kesalahan saat upload.', 'error');
             } finally {
                 // Re-enable button
                 uploadBtn.disabled = false;

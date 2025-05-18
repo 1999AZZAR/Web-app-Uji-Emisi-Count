@@ -3,16 +3,22 @@
 {% block title %}User Management - Aplikasi Uji Emisi{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
-        <h1 class="text-2xl font-bold text-gray-800 flex items-center">
-            <i class="fas fa-users text-primary mr-3"></i>
-            User Management
-        </h1>
-        <button id="show-add-modal" class="mt-4 md:mt-0 bg-primary hover:bg-primary-700 text-white py-2 px-4 rounded-md flex items-center transition-colors">
-            <i class="fas fa-plus-circle mr-2"></i>
-            Add New User
-        </button>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Gradient Header -->
+    <div class="bg-gradient-to-r from-primary to-primary-dark p-6 rounded-t-lg shadow-lg mb-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="fas fa-users text-white text-3xl mr-4"></i>
+                <div>
+                    <h1 class="text-2xl font-bold text-white">User Management</h1>
+                    <p class="text-white opacity-80 mt-1">Kelola pengguna dan hak akses sistem</p>
+                </div>
+            </div>
+            <button id="show-add-modal" class="bg-white text-primary hover:bg-gray-100 py-2 px-4 rounded-md flex items-center transition-colors">
+                <i class="fas fa-plus-circle mr-2"></i>
+                Add New User
+            </button>
+        </div>
     </div>
     
     <!-- Users List -->
@@ -75,9 +81,9 @@
     <!-- Add User Modal -->
     <div id="add-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
-            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                <h3 class="text-lg font-medium text-gray-900">Add New User</h3>
-                <button class="close-modal text-gray-400 hover:text-gray-500">
+            <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4 border-b border-gray-200 flex justify-between items-center rounded-t-lg">
+                <h3 class="text-lg font-medium text-white">Add New User</h3>
+                <button class="close-modal text-white hover:text-gray-200">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -142,9 +148,9 @@
     <!-- Edit User Modal -->
     <div id="edit-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
-            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                <h3 class="text-lg font-medium text-gray-900">Edit User</h3>
-                <button class="close-modal text-gray-400 hover:text-gray-500">
+            <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4 border-b border-gray-200 flex justify-between items-center rounded-t-lg">
+                <h3 class="text-lg font-medium text-white">Edit User</h3>
+                <button class="close-modal text-white hover:text-gray-200">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -211,9 +217,9 @@
     <!-- Delete Confirmation Modal -->
     <div id="delete-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
-            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                <h3 class="text-lg font-medium text-gray-900">Delete User</h3>
-                <button class="close-modal text-gray-400 hover:text-gray-500">
+            <div class="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4 border-b border-gray-200 flex justify-between items-center rounded-t-lg">
+                <h3 class="text-lg font-medium text-white">Delete User</h3>
+                <button class="close-modal text-white hover:text-gray-200">
                     <i class="fas fa-times"></i>
                 </button>
             </div>

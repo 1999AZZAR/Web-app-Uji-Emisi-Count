@@ -1,184 +1,490 @@
 {% extends "base.html" %}
 
-{% block title %}Konfigurasi Hasil Uji{% endblock %}
+{% block title %}Konfigurasi Parameter Uji Emisi{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-        <div class="p-6">
-            <div class="flex items-center mb-6">
-                <i class="fas fa-sliders-h text-primary text-2xl mr-3"></i>
-                <h2 class="text-2xl font-semibold text-gray-800">Konfigurasi Hasil Uji</h2>
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-primary to-primary-dark p-6">
+            <div class="flex items-center">
+                <i class="fas fa-cogs text-white text-3xl mr-4"></i>
+                <div>
+                    <h1 class="text-2xl font-bold text-white">Konfigurasi Parameter Uji Emisi</h1>
+                    <p class="text-white opacity-80 mt-1">Pengaturan batas parameter pengujian emisi kendaraan</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="flex border-b border-gray-200 bg-gray-50 px-6 overflow-x-auto">
+            <button id="tab-general" class="tab-btn px-4 py-3 font-medium text-primary border-b-2 border-primary" 
+                    onclick="showTab('general')">
+                <i class="fas fa-sliders-h mr-2"></i>
+                Parameter Umum
+            </button>
+            <button id="tab-bensin" class="tab-btn px-4 py-3 font-medium text-gray-600 border-b-2 border-transparent"
+                    onclick="showTab('bensin')">
+                <i class="fas fa-gas-pump mr-2"></i>
+                Kendaraan Bensin
+            </button>
+            <button id="tab-solar" class="tab-btn px-4 py-3 font-medium text-gray-600 border-b-2 border-transparent"
+                    onclick="showTab('solar')">
+                <i class="fas fa-truck mr-2"></i>
+                Kendaraan Solar
+            </button>
+            <button id="tab-help" class="tab-btn px-4 py-3 font-medium text-gray-600 border-b-2 border-transparent"
+                    onclick="showTab('help')">
+                <i class="fas fa-question-circle mr-2"></i>
+                Bantuan
+            </button>
+        </div>
+
+        <form method="POST" action="{{ url_for('api.update_config') }}" class="p-6">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- General Parameters Tab -->
+            <div id="general-tab" class="tab-content">
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-sliders-h text-primary mr-2"></i>
+                        Parameter Dasar
+                    </h2>
+                    <p class="text-sm text-gray-600 mb-4">Parameter dasar yang digunakan untuk evaluasi semua jenis kendaraan</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- CO Parameter -->
+                        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="co_max" class="font-medium text-gray-700">
+                                    <span class="bg-red-100 text-red-800 text-xs font-semibold mr-2 px-2 py-0.5 rounded">CO</span>
+                                    Maksimum CO (%)
+                                </label>
+                                <div class="text-xs text-gray-500">Karbon Monoksida</div>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="number" step="0.01" id="co_max" name="co_max" value="{{ config.co_max }}" 
+                                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                <span class="text-xs text-gray-500 ml-2">%</span>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">CO harus kurang dari nilai ini</p>
+                        </div>
+
+                        <!-- HC Parameter -->
+                        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="hc_max" class="font-medium text-gray-700">
+                                    <span class="bg-orange-100 text-orange-800 text-xs font-semibold mr-2 px-2 py-0.5 rounded">HC</span>
+                                    Maksimum HC (ppm)
+                                </label>
+                                <div class="text-xs text-gray-500">Hidrokarbon</div>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="number" step="1" id="hc_max" name="hc_max" value="{{ config.hc_max }}" 
+                                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                <span class="text-xs text-gray-500 ml-2">ppm</span>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">HC harus kurang dari nilai ini</p>
+                        </div>
+
+                        <!-- CO2 Min Parameter -->
+                        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="co2_min" class="font-medium text-gray-700">
+                                    <span class="bg-blue-100 text-blue-800 text-xs font-semibold mr-2 px-2 py-0.5 rounded">CO₂</span>
+                                    Minimum CO₂ (%)
+                                </label>
+                                <div class="text-xs text-gray-500">Karbon Dioksida</div>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="number" step="0.01" id="co2_min" name="co2_min" value="{{ config.co2_min }}" 
+                                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                <span class="text-xs text-gray-500 ml-2">%</span>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">CO₂ harus lebih dari nilai ini</p>
+                        </div>
+
+                        <!-- CO2 Max Parameter -->
+                        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="co2_max" class="font-medium text-gray-700">
+                                    <span class="bg-blue-100 text-blue-800 text-xs font-semibold mr-2 px-2 py-0.5 rounded">CO₂</span>
+                                    Maksimum CO₂ (%)
+                                </label>
+                                <div class="text-xs text-gray-500">Karbon Dioksida</div>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="number" step="0.01" id="co2_max" name="co2_max" value="{{ config.co2_max }}" 
+                                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                <span class="text-xs text-gray-500 ml-2">%</span>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">CO₂ harus kurang dari nilai ini</p>
+                        </div>
+
+                        <!-- O2 Min Parameter -->
+                        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="o2_min" class="font-medium text-gray-700">
+                                    <span class="bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2 py-0.5 rounded">O₂</span>
+                                    Minimum O₂ (%)
+                                </label>
+                                <div class="text-xs text-gray-500">Oksigen</div>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="number" step="0.01" id="o2_min" name="o2_min" value="{{ config.o2_min }}" 
+                                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                <span class="text-xs text-gray-500 ml-2">%</span>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">O₂ harus lebih dari nilai ini</p>
+                        </div>
+
+                        <!-- O2 Max Parameter -->
+                        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="o2_max" class="font-medium text-gray-700">
+                                    <span class="bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2 py-0.5 rounded">O₂</span>
+                                    Maksimum O₂ (%)
+                                </label>
+                                <div class="text-xs text-gray-500">Oksigen</div>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="number" step="0.01" id="o2_max" name="o2_max" value="{{ config.o2_max }}" 
+                                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                <span class="text-xs text-gray-500 ml-2">%</span>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">O₂ harus kurang dari nilai ini</p>
+                        </div>
+
+                        <!-- Lambda Min Parameter -->
+                        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="lambda_min" class="font-medium text-gray-700">
+                                    <span class="bg-purple-100 text-purple-800 text-xs font-semibold mr-2 px-2 py-0.5 rounded">λ</span>
+                                    Minimum Lambda
+                                </label>
+                                <div class="text-xs text-gray-500">Air Fuel Ratio</div>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="number" step="0.01" id="lambda_min" name="lambda_min" value="{{ config.lambda_min }}" 
+                                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">Lambda harus lebih dari nilai ini</p>
+                        </div>
+
+                        <!-- Lambda Max Parameter -->
+                        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="lambda_max" class="font-medium text-gray-700">
+                                    <span class="bg-purple-100 text-purple-800 text-xs font-semibold mr-2 px-2 py-0.5 rounded">λ</span>
+                                    Maksimum Lambda
+                                </label>
+                                <div class="text-xs text-gray-500">Air Fuel Ratio</div>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="number" step="0.01" id="lambda_max" name="lambda_max" value="{{ config.lambda_max }}" 
+                                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">Lambda harus kurang dari nilai ini</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <form method="POST" action="{{ url_for('api.update_config') }}" class="space-y-8">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                
-                <!-- Section 1: Basic Parameters -->
-                <div class="bg-gray-50 p-6 rounded-lg shadow-sm">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Parameter Dasar</h3>
-                    
-                    <!-- CO -->
-                    <div class="mb-6">
-                        <label for="co_max" class="block text-sm font-medium text-gray-700 mb-1">Maksimum CO (%):</label>
-                        <input type="number" step="0.01" id="co_max" name="co_max" value="{{ config.co_max }}" 
-                               class="w-full md:w-1/3 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
-                        <p class="mt-1 text-sm text-gray-500">Jika CO > nilai ini, hasil uji tidak lulus</p>
-                    </div>
-                    
-                    <!-- HC -->
-                    <div class="mb-6">
-                        <label for="hc_max" class="block text-sm font-medium text-gray-700 mb-1">Maksimum HC (ppm):</label>
-                        <input type="number" step="1" id="hc_max" name="hc_max" value="{{ config.hc_max }}" 
-                               class="w-full md:w-1/3 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
-                        <p class="mt-1 text-sm text-gray-500">Jika HC > nilai ini, hasil uji tidak lulus</p>
-                    </div>
-                    
-                    <!-- CO2 -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <label for="co2_min" class="block text-sm font-medium text-gray-700 mb-1">Minimum CO2 (%):</label>
-                            <input type="number" step="0.01" id="co2_min" name="co2_min" value="{{ config.co2_min }}" 
-                                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
-                            <p class="mt-1 text-sm text-gray-500">Jika CO2 < nilai ini, hasil uji tidak lulus</p>
-                        </div>
-                        <div>
-                            <label for="co2_max" class="block text-sm font-medium text-gray-700 mb-1">Maksimum CO2 (%):</label>
-                            <input type="number" step="0.01" id="co2_max" name="co2_max" value="{{ config.co2_max }}" 
-                                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
-                            <p class="mt-1 text-sm text-gray-500">Jika CO2 > nilai ini, hasil uji tidak lulus</p>
-                        </div>
-                    </div>
-                    
-                    <!-- O2 -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <label for="o2_min" class="block text-sm font-medium text-gray-700 mb-1">Minimum O2 (%):</label>
-                            <input type="number" step="0.01" id="o2_min" name="o2_min" value="{{ config.o2_min }}" 
-                                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
-                            <p class="mt-1 text-sm text-gray-500">Jika O2 < nilai ini, hasil uji tidak lulus</p>
-                        </div>
-                        <div>
-                            <label for="o2_max" class="block text-sm font-medium text-gray-700 mb-1">Maksimum O2 (%):</label>
-                            <input type="number" step="0.01" id="o2_max" name="o2_max" value="{{ config.o2_max }}" 
-                                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
-                            <p class="mt-1 text-sm text-gray-500">Jika O2 > nilai ini, hasil uji tidak lulus</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Lambda -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
-                        <div>
-                            <label for="lambda_min" class="block text-sm font-medium text-gray-700 mb-1">Minimum Lambda:</label>
-                            <input type="number" step="0.01" id="lambda_min" name="lambda_min" value="{{ config.lambda_min }}" 
-                                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
-                        </div>
-                        <div>
-                            <label for="lambda_max" class="block text-sm font-medium text-gray-700 mb-1">Maksimum Lambda:</label>
-                            <input type="number" step="0.01" id="lambda_max" name="lambda_max" value="{{ config.lambda_max }}" 
-                                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
-                        </div>
-                    </div>
-                    <p class="mt-1 text-sm text-gray-500">Lambda harus berada di antara nilai minimum dan maksimum untuk hasil uji lulus</p>
-                </div>
+            <!-- Bensin Parameters Tab -->
+            <div id="bensin-tab" class="tab-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-gas-pump text-primary mr-2"></i>
+                        Parameter Kendaraan Bensin
+                    </h2>
+                    <p class="text-sm text-gray-600 mb-4">Parameter khusus untuk kendaraan berbahan bakar bensin</p>
 
-                <!-- Section 2: Bensin Parameters -->
-                <div class="bg-blue-50 p-6 rounded-lg shadow-sm">
-                    <h3 class="text-lg font-medium text-blue-900 mb-4">Parameter Kendaraan Bensin</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <label for="bensin_load_category" class="block text-sm font-medium text-gray-700 mb-1">Kategori Beban:</label>
-                            <select name="bensin_load_category" id="bensin_load_category" 
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
-                                <option value="">Pilih Kategori Beban</option>
-                                <option value="kendaraan_muatan" {% if config.bensin_load_category == "kendaraan_muatan" %}selected{% endif %}>Kendaraan Muatan</option>
-                                <option value="kendaraan_penumpang" {% if config.bensin_load_category == "kendaraan_penumpang" %}selected{% endif %}>Kendaraan Penumpang</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="bensin_year_range" class="block text-sm font-medium text-gray-700 mb-1">Rentang Tahun:</label>
-                            <select name="bensin_year_range" id="bensin_year_range" 
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
-                                <option value="">Pilih Rentang Tahun</option>
-                                <option value="<2007" {% if config.bensin_year_range == "<2007" %}selected{% endif %}>Sebelum 2007</option>
-                                <option value="2007-2018" {% if config.bensin_year_range == "2007-2018" %}selected{% endif %}>2007-2018</option>
-                                <option value=">2018" {% if config.bensin_year_range == ">2018" %}selected{% endif %}>Setelah 2018</option>
-                            </select>
+                    <!-- Bensin Category Selection -->
+                    <div class="bg-blue-50 p-5 rounded-lg mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="bensin_load_category" class="block text-sm font-medium text-gray-700 mb-1">Kategori Beban:</label>
+                                <select name="bensin_load_category" id="bensin_load_category" 
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                    <option value="">Pilih Kategori Beban</option>
+                                    <option value="kendaraan_muatan" {% if config.bensin_load_category == "kendaraan_muatan" %}selected{% endif %}>Kendaraan Muatan</option>
+                                    <option value="kendaraan_penumpang" {% if config.bensin_load_category == "kendaraan_penumpang" %}selected{% endif %}>Kendaraan Penumpang</option>
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500">Kategori kendaraan berdasarkan beban</p>
+                            </div>
+                            <div>
+                                <label for="bensin_year_range" class="block text-sm font-medium text-gray-700 mb-1">Rentang Tahun:</label>
+                                <select name="bensin_year_range" id="bensin_year_range" 
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                    <option value="">Pilih Rentang Tahun</option>
+                                    <option value="<2007" {% if config.bensin_year_range == "<2007" %}selected{% endif %}>Sebelum 2007</option>
+                                    <option value="2007-2018" {% if config.bensin_year_range == "2007-2018" %}selected{% endif %}>2007-2018</option>
+                                    <option value=">2018" {% if config.bensin_year_range == ">2018" %}selected{% endif %}>Setelah 2018</option>
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500">Rentang tahun produksi kendaraan</p>
+                            </div>
                         </div>
                     </div>
-                    <div class="border border-blue-200 rounded-lg p-4 bg-blue-50 shadow-sm">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div class="space-y-1">
-                                <label for="bensin_co_max" class="block text-sm font-medium text-gray-700">Maksimum CO (%):</label>
+
+                    <!-- Bensin Parameters Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Bensin CO Max -->
+                        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="bensin_co_max" class="font-medium text-gray-700">
+                                    <span class="bg-red-100 text-red-800 text-xs font-semibold mr-2 px-2 py-0.5 rounded">CO</span>
+                                    Maksimum CO (%)
+                                </label>
+                            </div>
+                            <div class="flex items-center">
                                 <input type="number" step="0.01" id="bensin_co_max" name="bensin_co_max" value="{{ config.bensin_co_max }}" 
-                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
+                                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                <span class="text-xs text-gray-500 ml-2">%</span>
                             </div>
-                            <div class="space-y-1">
-                                <label for="bensin_hc_max" class="block text-sm font-medium text-gray-700">Maksimum HC (ppm):</label>
+                        </div>
+
+                        <!-- Bensin HC Max -->
+                        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="bensin_hc_max" class="font-medium text-gray-700">
+                                    <span class="bg-orange-100 text-orange-800 text-xs font-semibold mr-2 px-2 py-0.5 rounded">HC</span>
+                                    Maksimum HC (ppm)
+                                </label>
+                            </div>
+                            <div class="flex items-center">
                                 <input type="number" step="1" id="bensin_hc_max" name="bensin_hc_max" value="{{ config.bensin_hc_max }}" 
-                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
+                                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                <span class="text-xs text-gray-500 ml-2">ppm</span>
                             </div>
-                            <div class="space-y-1">
-                                <label for="bensin_co2_max" class="block text-sm font-medium text-gray-700">Maksimum CO2 (%):</label>
+                        </div>
+
+                        <!-- Bensin CO2 Max -->
+                        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="bensin_co2_max" class="font-medium text-gray-700">
+                                    <span class="bg-blue-100 text-blue-800 text-xs font-semibold mr-2 px-2 py-0.5 rounded">CO₂</span>
+                                    Maksimum CO₂ (%)
+                                </label>
+                            </div>
+                            <div class="flex items-center">
                                 <input type="number" step="0.01" id="bensin_co2_max" name="bensin_co2_max" value="{{ config.bensin_co2_max }}" 
-                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
+                                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                <span class="text-xs text-gray-500 ml-2">%</span>
                             </div>
-                            <div class="space-y-1">
-                                <label for="bensin_o2_max" class="block text-sm font-medium text-gray-700">Maksimum O2 (%):</label>
+                        </div>
+
+                        <!-- Bensin O2 Max -->
+                        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="bensin_o2_max" class="font-medium text-gray-700">
+                                    <span class="bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2 py-0.5 rounded">O₂</span>
+                                    Maksimum O₂ (%)
+                                </label>
+                            </div>
+                            <div class="flex items-center">
                                 <input type="number" step="0.01" id="bensin_o2_max" name="bensin_o2_max" value="{{ config.bensin_o2_max }}" 
-                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
+                                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                <span class="text-xs text-gray-500 ml-2">%</span>
                             </div>
-                            <div class="space-y-1">
-                                <label for="bensin_lambda_max" class="block text-sm font-medium text-gray-700">Maksimum Lambda:</label>
+                        </div>
+
+                        <!-- Bensin Lambda Max -->
+                        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="bensin_lambda_max" class="font-medium text-gray-700">
+                                    <span class="bg-purple-100 text-purple-800 text-xs font-semibold mr-2 px-2 py-0.5 rounded">λ</span>
+                                    Maksimum Lambda
+                                </label>
+                            </div>
+                            <div class="flex items-center">
                                 <input type="number" step="0.01" id="bensin_lambda_max" name="bensin_lambda_max" value="{{ config.bensin_lambda_max }}" 
-                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
+                                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Section 3: Solar Parameters -->
-                <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Parameter Kendaraan Solar</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <label for="solar_load_category" class="block text-sm font-medium text-gray-700 mb-1">Kategori Beban:</label>
-                            <select name="solar_load_category" id="solar_load_category" 
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
-                                <option value="">Pilih Kategori Beban</option>
-                                <option value="<3.5ton" {% if config.solar_load_category == "<3.5ton" %}selected{% endif %}>< 3.5 Ton</option>
-                                <option value=">=3.5ton" {% if config.solar_load_category == ">=3.5ton" %}selected{% endif %}>≥ 3.5 Ton</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="solar_year_range" class="block text-sm font-medium text-gray-700 mb-1">Rentang Tahun:</label>
-                            <select name="solar_year_range" id="solar_year_range" 
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
-                                <option value="">Pilih Rentang Tahun</option>
-                                <option value="<2010" {% if config.solar_year_range == "<2010" %}selected{% endif %}>Sebelum 2010</option>
-                                <option value="2010-2021" {% if config.solar_year_range == "2010-2021" %}selected{% endif %}>2010-2021</option>
-                                <option value=">2021" {% if config.solar_year_range == ">2021" %}selected{% endif %}>Setelah 2021</option>
-                            </select>
+            <!-- Solar Parameters Tab -->
+            <div id="solar-tab" class="tab-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-truck text-primary mr-2"></i>
+                        Parameter Kendaraan Solar
+                    </h2>
+                    <p class="text-sm text-gray-600 mb-4">Parameter khusus untuk kendaraan berbahan bakar solar/diesel</p>
+
+                    <!-- Solar Category Selection -->
+                    <div class="bg-gray-50 p-5 rounded-lg mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="solar_load_category" class="block text-sm font-medium text-gray-700 mb-1">Kategori Beban:</label>
+                                <select name="solar_load_category" id="solar_load_category" 
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                    <option value="">Pilih Kategori Beban</option>
+                                    <option value="<3.5ton" {% if config.solar_load_category == "<3.5ton" %}selected{% endif %}>< 3.5 Ton</option>
+                                    <option value=">=3.5ton" {% if config.solar_load_category == ">=3.5ton" %}selected{% endif %}>≥ 3.5 Ton</option>
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500">Kategori kendaraan berdasarkan berat</p>
+                            </div>
+                            <div>
+                                <label for="solar_year_range" class="block text-sm font-medium text-gray-700 mb-1">Rentang Tahun:</label>
+                                <select name="solar_year_range" id="solar_year_range" 
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                                    <option value="">Pilih Rentang Tahun</option>
+                                    <option value="<2010" {% if config.solar_year_range == "<2010" %}selected{% endif %}>Sebelum 2010</option>
+                                    <option value="2010-2021" {% if config.solar_year_range == "2010-2021" %}selected{% endif %}>2010-2021</option>
+                                    <option value=">2021" {% if config.solar_year_range == ">2021" %}selected{% endif %}>Setelah 2021</option>
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500">Rentang tahun produksi kendaraan</p>
+                            </div>
                         </div>
                     </div>
-                    <div class="border border-gray-300 rounded-lg p-4 bg-white shadow-sm">
-                        <div class="space-y-1">
-                            <label for="solar_opacity_max" class="block text-sm font-medium text-gray-700">Maksimum Opasitas (%):</label>
+
+                    <!-- Solar Opacity Max -->
+                    <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="solar_opacity_max" class="font-medium text-gray-700">
+                                <span class="bg-gray-100 text-gray-800 text-sm font-semibold mr-2 px-2.5 py-1 rounded">Opasitas</span>
+                                Batas Maksimum Opasitas (%)
+                            </label>
+                        </div>
+                        <div class="flex items-center">
                             <input type="number" step="0.1" id="solar_opacity_max" name="solar_opacity_max" value="{{ config.solar_opacity_max }}" 
-                                   class="w-full md:w-1/3 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
-                            <p class="mt-1 text-sm text-gray-500">Jika Opasitas > nilai ini, hasil uji tidak lulus</p>
+                                   class="block w-full md:w-1/3 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm">
+                            <span class="text-xs text-gray-500 ml-2">%</span>
                         </div>
+                        <p class="mt-1 text-sm text-gray-600">Opasitas adalah ukuran kepadatan asap yang dikeluarkan oleh kendaraan diesel. Nilai maksimum yang diperbolehkan bervariasi berdasarkan kategori beban dan tahun kendaraan.</p>
                     </div>
                 </div>
+            </div>
 
-                <div class="flex justify-center">
-                    <button type="submit" 
-                            class="inline-flex items-center justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                        <i class="fas fa-save mr-2"></i> Simpan Konfigurasi
-                    </button>
+            <!-- Help Tab -->
+            <div id="help-tab" class="tab-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-question-circle text-primary mr-2"></i>
+                        Bantuan Konfigurasi
+                    </h2>
+                    
+                    <div class="bg-blue-50 p-5 rounded-lg mb-5 border border-blue-200">
+                        <h3 class="text-md font-medium text-blue-800 mb-2">Panduan Konfigurasi</h3>
+                        <p class="text-sm text-gray-700 mb-3">
+                            Halaman ini memungkinkan administrator untuk mengkonfigurasi parameter uji emisi untuk berbagai jenis kendaraan.
+                            Parameter yang ditetapkan akan digunakan untuk menentukan apakah hasil uji emisi kendaraan dinyatakan lulus atau tidak.
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                            <div class="flex">
+                                <div class="bg-white p-3 rounded-lg shadow-sm flex items-center">
+                                    <i class="fas fa-sliders-h text-primary text-xl mr-3"></i>
+                                    <div>
+                                        <h4 class="font-medium text-gray-800">Parameter Umum</h4>
+                                        <p class="text-xs text-gray-600">Pengaturan dasar untuk semua kendaraan</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex">
+                                <div class="bg-white p-3 rounded-lg shadow-sm flex items-center">
+                                    <i class="fas fa-gas-pump text-primary text-xl mr-3"></i>
+                                    <div>
+                                        <h4 class="font-medium text-gray-800">Kendaraan Bensin</h4>
+                                        <p class="text-xs text-gray-600">Pengaturan khusus untuk kendaraan bensin</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex">
+                                <div class="bg-white p-3 rounded-lg shadow-sm flex items-center">
+                                    <i class="fas fa-truck text-primary text-xl mr-3"></i>
+                                    <div>
+                                        <h4 class="font-medium text-gray-800">Kendaraan Solar</h4>
+                                        <p class="text-xs text-gray-600">Pengaturan khusus untuk kendaraan solar</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-yellow-50 p-5 rounded-lg mb-5 border border-yellow-200">
+                        <h3 class="text-md font-medium text-yellow-800 mb-2">Keterangan Parameter</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-start">
+                                <span class="bg-red-100 text-red-800 text-xs font-semibold mr-2 px-2 py-0.5 rounded flex-shrink-0 mt-0.5">CO</span>
+                                <div>
+                                    <span class="font-medium">Carbon Monoxide (Karbon Monoksida)</span> - Gas beracun yang dihasilkan dari pembakaran tidak sempurna.
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="bg-orange-100 text-orange-800 text-xs font-semibold mr-2 px-2 py-0.5 rounded flex-shrink-0 mt-0.5">HC</span>
+                                <div>
+                                    <span class="font-medium">Hydrocarbon (Hidrokarbon)</span> - Senyawa organik yang terdiri dari hidrogen dan karbon.
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="bg-blue-100 text-blue-800 text-xs font-semibold mr-2 px-2 py-0.5 rounded flex-shrink-0 mt-0.5">CO₂</span>
+                                <div>
+                                    <span class="font-medium">Carbon Dioxide (Karbon Dioksida)</span> - Gas yang dihasilkan dari pembakaran sempurna.
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2 py-0.5 rounded flex-shrink-0 mt-0.5">O₂</span>
+                                <div>
+                                    <span class="font-medium">Oxygen (Oksigen)</span> - Kadar oksigen dalam gas buang.
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="bg-purple-100 text-purple-800 text-xs font-semibold mr-2 px-2 py-0.5 rounded flex-shrink-0 mt-0.5">λ</span>
+                                <div>
+                                    <span class="font-medium">Lambda</span> - Rasio udara terhadap bahan bakar, nilai ideal adalah 1.
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="bg-gray-100 text-gray-800 text-xs font-semibold mr-2 px-2 py-0.5 rounded flex-shrink-0 mt-0.5">Opasitas</span>
+                                <div>
+                                    <span class="font-medium">Opacity (Opasitas)</span> - Tingkat kepekatan asap kendaraan diesel.
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex justify-center pt-6 border-t border-gray-200">
+                <button type="submit" 
+                        class="inline-flex items-center justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
+                    <i class="fas fa-save mr-2"></i> Simpan Konfigurasi
+                </button>
+            </div>
+        </form>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function showTab(tabId) {
+        // Hide all tab contents
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.add('hidden');
+        });
+        
+        // Reset all tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('text-primary', 'border-primary');
+            btn.classList.add('text-gray-600', 'border-transparent');
+        });
+        
+        // Show selected tab content
+        document.getElementById(tabId + '-tab').classList.remove('hidden');
+        
+        // Highlight selected tab button
+        document.getElementById('tab-' + tabId).classList.remove('text-gray-600', 'border-transparent');
+        document.getElementById('tab-' + tabId).classList.add('text-primary', 'border-primary');
+    }
+
+    // Initialize tooltips for the form fields
+    document.addEventListener('DOMContentLoaded', function() {
+        // If you have tooltip library, initialize it here
+    });
+</script>
 {% endblock %}

@@ -71,319 +71,333 @@
 {% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div class="bg-blue-600 rounded-lg shadow-lg overflow-hidden">
-        <div class="p-6">
-            <div class="flex items-center">
-                <div class="p-3 rounded-full bg-blue-800 bg-opacity-75">
-                    <i class="fas fa-car text-white text-2xl"></i>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Gradient Header -->
+    <div class="bg-gradient-to-r from-primary to-primary-dark p-6 rounded-t-lg shadow-lg mb-6">
+        <div class="flex items-center">
+            <i class="fas fa-chart-bar text-white text-3xl mr-4"></i>
+            <div>
+                <h1 class="text-2xl font-bold text-white">Laporan Uji Emisi</h1>
+                <p class="text-white opacity-80 mt-1">Data kendaraan dan hasil pengujian emisi</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-blue-600 rounded-lg shadow-lg overflow-hidden">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-800 bg-opacity-75">
+                        <i class="fas fa-car text-white text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-blue-100 font-medium">Total Kendaraan</p>
+                        <p class="text-3xl font-bold text-white">{{ total_kendaraan }}</p>
+                    </div>
                 </div>
-                <div class="ml-4">
-                    <p class="text-sm text-blue-100 font-medium">Total Kendaraan</p>
-                    <p class="text-3xl font-bold text-white">{{ total_kendaraan }}</p>
+            </div>
+        </div>
+
+        <div class="bg-green-600 rounded-lg shadow-lg overflow-hidden">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-800 bg-opacity-75">
+                        <i class="fas fa-check-circle text-white text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-green-100 font-medium">Data Valid</p>
+                        <p class="text-3xl font-bold text-white">{{ total_valid }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-teal-600 rounded-lg shadow-lg overflow-hidden">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-teal-800 bg-opacity-75">
+                        <i class="fas fa-award text-white text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-teal-100 font-medium">Lulus Uji Emisi</p>
+                        <p class="text-3xl font-bold text-white">{{ total_lulus }}</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="bg-green-600 rounded-lg shadow-lg overflow-hidden">
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
         <div class="p-6">
-            <div class="flex items-center">
-                <div class="p-3 rounded-full bg-green-800 bg-opacity-75">
-                    <i class="fas fa-check-circle text-white text-2xl"></i>
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
+                <div class="flex items-center">
+                    <h2 class="text-xl font-bold mr-4">Data Kendaraan dan Hasil Uji</h2>
+                    <a href="{{ url_for('vehicles.export_csv') }}" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 mr-2">
+                        <i class="fas fa-file-csv mr-2"></i> Export CSV
+                    </a>
+                    <a href="{{ url_for('reports.export_excel') }}" class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark">
+                        <i class="fas fa-file-excel mr-2"></i> Export Excel
+                    </a>
                 </div>
-                <div class="ml-4">
-                    <p class="text-sm text-green-100 font-medium">Data Valid</p>
-                    <p class="text-3xl font-bold text-white">{{ total_valid }}</p>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('vehicles.dashboard') }}" class="text-primary hover:text-primary-dark">
+                        <i class="fas fa-arrow-left mr-2"></i> Kembali
+                    </a>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="bg-teal-600 rounded-lg shadow-lg overflow-hidden">
-        <div class="p-6">
-            <div class="flex items-center">
-                <div class="p-3 rounded-full bg-teal-800 bg-opacity-75">
-                    <i class="fas fa-award text-white text-2xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm text-teal-100 font-medium">Lulus Uji Emisi</p>
-                    <p class="text-3xl font-bold text-white">{{ total_lulus }}</p>
-                </div>
+            <!-- Filtering options -->
+            <div class="mb-6 bg-gray-50 p-4 rounded-md shadow-sm">
+                <h3 class="text-md font-medium text-gray-700 mb-2">Filter Laporan</h3>
+                <form id="filter-form" action="{{ url_for('reports.dashboard') }}" method="GET" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <div>
+                        <label for="plat_nomor" class="block text-sm font-medium text-gray-700 mb-1">Plat Nomor</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-id-card text-gray-400"></i>
+                            </div>
+                            <input type="text" id="plat_nomor" name="plat_nomor" value="{{ request.args.get('plat_nomor', '') }}"
+                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                                   placeholder="B1234XX">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="merek" class="block text-sm font-medium text-gray-700 mb-1">Merek</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-car text-gray-400"></i>
+                            </div>
+                            <input type="text" id="merek" name="merek" value="{{ request.args.get('merek', '') }}"
+                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+                                   placeholder="Toyota, Honda, dll">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-calendar-alt text-gray-400"></i>
+                            </div>
+                            <input type="date" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}"
+                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Akhir</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-calendar-alt text-gray-400"></i>
+                            </div>
+                            <input type="date" id="end_date" name="end_date" value="{{ request.args.get('end_date', '') }}"
+                                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="result" class="block text-sm font-medium text-gray-700 mb-1">Hasil Uji</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-check text-gray-400"></i>
+                            </div>
+                            <select id="result" name="result" 
+                                    class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                                <option value="">Semua</option>
+                                <option value="pass" {% if request.args.get('result') == 'pass' %}selected{% endif %}>Lulus</option>
+                                <option value="fail" {% if request.args.get('result') == 'fail' %}selected{% endif %}>Tidak Lulus</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="md:col-span-3 lg:col-span-5 flex flex-wrap justify-between items-center space-y-2 sm:space-y-0 pt-2">
+                        <div class="text-sm text-gray-600" id="filter-status">
+                            {% if request.args %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <i class="fas fa-filter mr-1"></i> Filter aktif
+                            </span>
+                            {% else %}
+                            <span class="text-gray-500">Tidak ada filter aktif</span>
+                            {% endif %}
+                        </div>
+                        <div class="flex justify-end space-x-3">
+                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-700 focus:outline-none">
+                                <i class="fas fa-filter mr-2"></i>Filter
+                            </button>
+                            <a href="{{ url_for('reports.dashboard') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none">
+                                <i class="fas fa-times mr-2"></i>Reset
+                            </a>
+                        </div>
+                    </div>
+                </form>
             </div>
-        </div>
-    </div>
-</div>
 
-<div class="bg-white rounded-lg shadow-lg overflow-hidden">
-    <div class="p-6">
-        <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
-            <div class="flex items-center">
-                <h2 class="text-xl font-bold mr-4">Data Kendaraan dan Hasil Uji</h2>
-                <a href="{{ url_for('vehicles.export_csv') }}" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 mr-2">
-                    <i class="fas fa-file-csv mr-2"></i> Export CSV
-                </a>
-                <a href="{{ url_for('reports.export_excel') }}" class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark">
-                    <i class="fas fa-file-excel mr-2"></i> Export Excel
-                </a>
-            </div>
-            <div class="flex items-center space-x-4">
-                <a href="{{ url_for('vehicles.dashboard') }}" class="text-primary hover:text-primary-dark">
-                    <i class="fas fa-arrow-left mr-2"></i> Kembali
-                </a>
-            </div>
-        </div>
-
-        <!-- Filtering options -->
-        <div class="mb-6 bg-gray-50 p-4 rounded-md shadow-sm">
-            <h3 class="text-md font-medium text-gray-700 mb-2">Filter Laporan</h3>
-            <form id="filter-form" action="{{ url_for('reports.dashboard') }}" method="GET" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                <div>
-                    <label for="plat_nomor" class="block text-sm font-medium text-gray-700 mb-1">Plat Nomor</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-id-card text-gray-400"></i>
-                        </div>
-                        <input type="text" id="plat_nomor" name="plat_nomor" value="{{ request.args.get('plat_nomor', '') }}"
-                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                               placeholder="B1234XX">
-                    </div>
-                </div>
-                <div>
-                    <label for="merek" class="block text-sm font-medium text-gray-700 mb-1">Merek</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-car text-gray-400"></i>
-                        </div>
-                        <input type="text" id="merek" name="merek" value="{{ request.args.get('merek', '') }}"
-                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                               placeholder="Toyota, Honda, dll">
-                    </div>
-                </div>
-                <div>
-                    <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-calendar-alt text-gray-400"></i>
-                        </div>
-                        <input type="date" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}"
-                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
-                    </div>
-                </div>
-                <div>
-                    <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Akhir</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-calendar-alt text-gray-400"></i>
-                        </div>
-                        <input type="date" id="end_date" name="end_date" value="{{ request.args.get('end_date', '') }}"
-                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
-                    </div>
-                </div>
-                <div>
-                    <label for="result" class="block text-sm font-medium text-gray-700 mb-1">Hasil Uji</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-check text-gray-400"></i>
-                        </div>
-                        <select id="result" name="result" 
-                                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
-                            <option value="">Semua</option>
-                            <option value="pass" {% if request.args.get('result') == 'pass' %}selected{% endif %}>Lulus</option>
-                            <option value="fail" {% if request.args.get('result') == 'fail' %}selected{% endif %}>Tidak Lulus</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="md:col-span-3 lg:col-span-5 flex flex-wrap justify-between items-center space-y-2 sm:space-y-0 pt-2">
-                    <div class="text-sm text-gray-600" id="filter-status">
-                        {% if request.args %}
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            <i class="fas fa-filter mr-1"></i> Filter aktif
-                        </span>
-                        {% else %}
-                        <span class="text-gray-500">Tidak ada filter aktif</span>
-                        {% endif %}
-                    </div>
-                    <div class="flex justify-end space-x-3">
-                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-700 focus:outline-none">
-                            <i class="fas fa-filter mr-2"></i>Filter
-                        </button>
-                        <a href="{{ url_for('reports.dashboard') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none">
-                            <i class="fas fa-times mr-2"></i>Reset
+            <div class="table-container relative">
+                <div class="sticky-indicator"></div>
+                <table class="min-w-full divide-y divide-gray-200 table-fixed">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plat Nomor</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Merek</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tahun</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Bahan Bakar</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori Beban</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Instansi</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CO</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CO2</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">HC</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">O2</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lambda</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opacity</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valid</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lulus</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Operator</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for item in data %}
+                        <tr class="hover:bg-gray-50 {% if loop.index is odd %}bg-white{% else %}bg-gray-50{% endif %} transition-colors duration-150 ease-in-out">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.kendaraan.jenis }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ item.kendaraan.plat_nomor }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.kendaraan.merek }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.kendaraan.tipe }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.kendaraan.tahun }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <span class="whitespace-nowrap {% if item.kendaraan.fuel_type == 'solar' %}text-blue-700{% else %}text-green-700{% endif %} font-medium">
+                                    {% if item.kendaraan.fuel_type == 'solar' %}
+                                        <i class="fas fa-gas-pump mr-1"></i>Solar
+                                    {% else %}
+                                        <i class="fas fa-gas-pump mr-1"></i>Bensin
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {% if item.kendaraan.fuel_type == 'solar' %}
+                                    {% if item.kendaraan.load_category == '<3.5ton' %}
+                                        < 3.5 Ton
+                                    {% else %}
+                                        ≥ 3.5 Ton
+                                    {% endif %}
+                                {% else %}
+                                    {% if item.kendaraan.load_category == 'kendaraan_muatan' %}
+                                        Kendaraan Muatan
+                                    {% else %}
+                                        Kendaraan Penumpang
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.kendaraan.nama_instansi }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.2f"|format(item.hasil.co) if item.hasil.co is not none else '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.2f"|format(item.hasil.co2) if item.hasil.co2 is not none else '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.hasil.hc if item.hasil.hc is not none else '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.2f"|format(item.hasil.o2) if item.hasil.o2 is not none else '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.2f"|format(item.hasil.lambda_val) if item.hasil.lambda_val is not none else '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {% if item.kendaraan.fuel_type == 'solar' %}
+                                    {{ "%.1f"|format(item.hasil.opacity|float) if item.hasil.opacity is not none else '-' }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if item.hasil.valid %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                    {% if item.hasil.valid %}
+                                    <i class="fas fa-check-circle mr-1"></i>Ya
+                                    {% else %}
+                                    <i class="fas fa-times-circle mr-1"></i>Tidak
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if item.hasil.lulus %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                    {% if item.hasil.lulus %}
+                                    <i class="fas fa-check-circle mr-1"></i>Ya
+                                    {% else %}
+                                    <i class="fas fa-times-circle mr-1"></i>Tidak
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.hasil.tanggal }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.operator }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <a href="{{ url_for('tests.test_page') }}" class="text-primary hover:text-primary-dark">
+                                    <i class="fas fa-edit mr-1"></i>Edit
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                <!-- Show message when no data -->
+                {% if data|length == 0 %}
+                <div class="text-center py-10">
+                    <div class="bg-gray-50 p-6 rounded-lg shadow-sm">
+                        <i class="fas fa-info-circle text-4xl text-blue-400 mb-4"></i>
+                        <h3 class="text-lg font-medium text-gray-700 mb-1">Tidak ada data</h3>
+                        <p class="text-gray-500">Tidak ada data yang cocok dengan filter yang dipilih</p>
+                        <a href="{{ url_for('reports.dashboard') }}" class="mt-4 inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none">
+                            <i class="fas fa-times mr-2"></i>Reset Filter
                         </a>
                     </div>
                 </div>
-            </form>
-        </div>
+                {% endif %}
+            </div>
 
-        <div class="table-container relative">
-            <div class="sticky-indicator"></div>
-            <table class="min-w-full divide-y divide-gray-200 table-fixed">
-                <thead class="bg-gray-100">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plat Nomor</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Merek</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tahun</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Bahan Bakar</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori Beban</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Instansi</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CO</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CO2</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">HC</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">O2</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lambda</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opacity</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valid</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lulus</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Operator</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {% for item in data %}
-                    <tr class="hover:bg-gray-50 {% if loop.index is odd %}bg-white{% else %}bg-gray-50{% endif %} transition-colors duration-150 ease-in-out">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.kendaraan.jenis }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ item.kendaraan.plat_nomor }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.kendaraan.merek }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.kendaraan.tipe }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.kendaraan.tahun }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <span class="whitespace-nowrap {% if item.kendaraan.fuel_type == 'solar' %}text-blue-700{% else %}text-green-700{% endif %} font-medium">
-                                {% if item.kendaraan.fuel_type == 'solar' %}
-                                    <i class="fas fa-gas-pump mr-1"></i>Solar
-                                {% else %}
-                                    <i class="fas fa-gas-pump mr-1"></i>Bensin
-                                {% endif %}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {% if item.kendaraan.fuel_type == 'solar' %}
-                                {% if item.kendaraan.load_category == '<3.5ton' %}
-                                    < 3.5 Ton
-                                {% else %}
-                                    ≥ 3.5 Ton
-                                {% endif %}
-                            {% else %}
-                                {% if item.kendaraan.load_category == 'kendaraan_muatan' %}
-                                    Kendaraan Muatan
-                                {% else %}
-                                    Kendaraan Penumpang
-                                {% endif %}
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.kendaraan.nama_instansi }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.2f"|format(item.hasil.co) if item.hasil.co is not none else '-' }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.2f"|format(item.hasil.co2) if item.hasil.co2 is not none else '-' }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.hasil.hc if item.hasil.hc is not none else '-' }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.2f"|format(item.hasil.o2) if item.hasil.o2 is not none else '-' }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.2f"|format(item.hasil.lambda_val) if item.hasil.lambda_val is not none else '-' }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {% if item.kendaraan.fuel_type == 'solar' %}
-                                {{ "%.1f"|format(item.hasil.opacity|float) if item.hasil.opacity is not none else '-' }}
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if item.hasil.valid %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
-                                {% if item.hasil.valid %}
-                                <i class="fas fa-check-circle mr-1"></i>Ya
-                                {% else %}
-                                <i class="fas fa-times-circle mr-1"></i>Tidak
-                                {% endif %}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if item.hasil.lulus %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
-                                {% if item.hasil.lulus %}
-                                <i class="fas fa-check-circle mr-1"></i>Ya
-                                {% else %}
-                                <i class="fas fa-times-circle mr-1"></i>Tidak
-                                {% endif %}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.hasil.tanggal }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.operator }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <a href="{{ url_for('tests.test_page') }}" class="text-primary hover:text-primary-dark">
-                                <i class="fas fa-edit mr-1"></i>Edit
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            
-            <!-- Show message when no data -->
-            {% if data|length == 0 %}
-            <div class="text-center py-10">
-                <div class="bg-gray-50 p-6 rounded-lg shadow-sm">
-                    <i class="fas fa-info-circle text-4xl text-blue-400 mb-4"></i>
-                    <h3 class="text-lg font-medium text-gray-700 mb-1">Tidak ada data</h3>
-                    <p class="text-gray-500">Tidak ada data yang cocok dengan filter yang dipilih</p>
-                    <a href="{{ url_for('reports.dashboard') }}" class="mt-4 inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none">
-                        <i class="fas fa-times mr-2"></i>Reset Filter
+            <!-- Pagination -->
+            {% if total_pages > 1 %}
+            <div class="mt-6 flex items-center justify-between">
+                <div class="text-sm text-gray-700">
+                    Menampilkan <span class="font-medium">{{ ((page - 1) * per_page) + 1 }}</span>
+                    sampai <span class="font-medium">{{ min((page * per_page), total_results) }}</span>
+                    dari <span class="font-medium">{{ total_results }}</span> hasil
+                </div>
+                <div class="flex-1 flex justify-between sm:justify-end ml-4">
+                    {% if has_prev %}
+                    <a href="{{ url_for('reports.dashboard', page=page-1, per_page=per_page, plat_nomor=request.args.get('plat_nomor', ''), merek=request.args.get('merek', ''), start_date=request.args.get('start_date', ''), end_date=request.args.get('end_date', ''), result=request.args.get('result', '')) }}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md bg-white text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-chevron-left mr-2"></i>Sebelumnya
                     </a>
+                    {% else %}
+                    <span class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md bg-gray-100 text-gray-400 cursor-not-allowed">
+                        <i class="fas fa-chevron-left mr-2"></i>Sebelumnya
+                    </span>
+                    {% endif %}
+
+                    <div class="hidden md:flex mx-2 items-center">
+                        {% for p in range(1, total_pages + 1) %}
+                            {% if p == page %}
+                            <span class="inline-flex items-center px-4 py-2 mx-1 border border-primary bg-primary-50 text-sm font-medium rounded-md text-primary">
+                                {{ p }}
+                            </span>
+                            {% elif p <= 5 or p >= total_pages - 4 or (p >= page - 1 and p <= page + 1) %}
+                            <a href="{{ url_for('reports.dashboard', page=p, per_page=per_page, plat_nomor=request.args.get('plat_nomor', ''), merek=request.args.get('merek', ''), start_date=request.args.get('start_date', ''), end_date=request.args.get('end_date', ''), result=request.args.get('result', '')) }}"
+                               class="inline-flex items-center px-4 py-2 mx-1 border border-gray-300 text-sm font-medium rounded-md bg-white text-gray-700 hover:bg-gray-50">
+                                {{ p }}
+                            </a>
+                            {% elif p == 6 and total_pages > 10 and page > 4 %}
+                            <span class="inline-flex items-center px-2 mx-1 text-gray-500">...</span>
+                            {% elif p == total_pages - 5 and total_pages > 10 and page < total_pages - 3 %}
+                            <span class="inline-flex items-center px-2 mx-1 text-gray-500">...</span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    {% if has_next %}
+                    <a href="{{ url_for('reports.dashboard', page=page+1, per_page=per_page, plat_nomor=request.args.get('plat_nomor', ''), merek=request.args.get('merek', ''), start_date=request.args.get('start_date', ''), end_date=request.args.get('end_date', ''), result=request.args.get('result', '')) }}"
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md bg-white text-gray-700 hover:bg-gray-50">
+                        Selanjutnya<i class="fas fa-chevron-right ml-2"></i>
+                    </a>
+                    {% else %}
+                    <span class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md bg-gray-100 text-gray-400 cursor-not-allowed">
+                        Selanjutnya<i class="fas fa-chevron-right ml-2"></i>
+                    </span>
+                    {% endif %}
                 </div>
             </div>
             {% endif %}
         </div>
-
-        <!-- Pagination -->
-        {% if total_pages > 1 %}
-        <div class="mt-6 flex items-center justify-between">
-            <div class="text-sm text-gray-700">
-                Menampilkan <span class="font-medium">{{ ((page - 1) * per_page) + 1 }}</span>
-                sampai <span class="font-medium">{{ min((page * per_page), total_results) }}</span>
-                dari <span class="font-medium">{{ total_results }}</span> hasil
-            </div>
-            <div class="flex-1 flex justify-between sm:justify-end ml-4">
-                {% if has_prev %}
-                <a href="{{ url_for('reports.dashboard', page=page-1, per_page=per_page, plat_nomor=request.args.get('plat_nomor', ''), merek=request.args.get('merek', ''), start_date=request.args.get('start_date', ''), end_date=request.args.get('end_date', ''), result=request.args.get('result', '')) }}" 
-                   class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md bg-white text-gray-700 hover:bg-gray-50">
-                    <i class="fas fa-chevron-left mr-2"></i>Sebelumnya
-                </a>
-                {% else %}
-                <span class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md bg-gray-100 text-gray-400 cursor-not-allowed">
-                    <i class="fas fa-chevron-left mr-2"></i>Sebelumnya
-                </span>
-                {% endif %}
-
-                <div class="hidden md:flex mx-2 items-center">
-                    {% for p in range(1, total_pages + 1) %}
-                        {% if p == page %}
-                        <span class="inline-flex items-center px-4 py-2 mx-1 border border-primary bg-primary-50 text-sm font-medium rounded-md text-primary">
-                            {{ p }}
-                        </span>
-                        {% elif p <= 5 or p >= total_pages - 4 or (p >= page - 1 and p <= page + 1) %}
-                        <a href="{{ url_for('reports.dashboard', page=p, per_page=per_page, plat_nomor=request.args.get('plat_nomor', ''), merek=request.args.get('merek', ''), start_date=request.args.get('start_date', ''), end_date=request.args.get('end_date', ''), result=request.args.get('result', '')) }}"
-                           class="inline-flex items-center px-4 py-2 mx-1 border border-gray-300 text-sm font-medium rounded-md bg-white text-gray-700 hover:bg-gray-50">
-                            {{ p }}
-                        </a>
-                        {% elif p == 6 and total_pages > 10 and page > 4 %}
-                        <span class="inline-flex items-center px-2 mx-1 text-gray-500">...</span>
-                        {% elif p == total_pages - 5 and total_pages > 10 and page < total_pages - 3 %}
-                        <span class="inline-flex items-center px-2 mx-1 text-gray-500">...</span>
-                        {% endif %}
-                    {% endfor %}
-                </div>
-
-                {% if has_next %}
-                <a href="{{ url_for('reports.dashboard', page=page+1, per_page=per_page, plat_nomor=request.args.get('plat_nomor', ''), merek=request.args.get('merek', ''), start_date=request.args.get('start_date', ''), end_date=request.args.get('end_date', ''), result=request.args.get('result', '')) }}"
-                   class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md bg-white text-gray-700 hover:bg-gray-50">
-                    Selanjutnya<i class="fas fa-chevron-right ml-2"></i>
-                </a>
-                {% else %}
-                <span class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md bg-gray-100 text-gray-400 cursor-not-allowed">
-                    Selanjutnya<i class="fas fa-chevron-right ml-2"></i>
-                </span>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
