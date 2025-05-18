@@ -1,124 +1,167 @@
 {% extends "base.html" %}
+
 {% block content %}
   <div class="max-w-4xl mx-auto">
     <input type="hidden" id="currentUserId" value="{{ current_user.id }}">
-    <div class="bg-white shadow-lg rounded-lg overflow-hidden p-6 space-y-6">
-      <div class="flex items-center mb-4">
-        <i class="fas fa-car-side text-primary text-2xl mr-2"></i>
-        <h2 class="text-2xl font-semibold text-gray-800">Daftar Kendaraan</h2>
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+      <!-- Gradient Header -->
+      <div class="bg-gradient-to-r from-primary to-primary-dark p-6">
+        <div class="flex items-center">
+          <i class="fas fa-car-side text-white text-3xl mr-4"></i>
+          <div>
+            <h1 class="text-2xl font-bold text-white">Daftar Kendaraan</h1>
+            <p class="text-white opacity-80 mt-1">Pengujian emisi kendaraan terdaftar</p>
+          </div>
+        </div>
       </div>
-      <div class="mb-6 flex flex-wrap gap-4">
-        <input id="filterPlat" type="text" placeholder="Search Plat" class="flex-grow sm:flex-shrink-0 w-full sm:w-1/5 border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary" />
-        <select id="filterMerek" class="w-full sm:w-1/5 border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary">
-          <option value="">All Mereks</option>
-        </select>
-        <select id="filterTipe" class="w-full sm:w-1/5 border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary">
-          <option value="">All Tipes</option>
-        </select>
-        <select id="filterJenis" class="w-full sm:w-1/5 border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary">
-          <option value="">All Jenis</option>
-          <option value="umum">Umum</option>
-          <option value="dinas">Dinas</option>
-        </select>
-        <select id="filterTested" class="w-full sm:w-1/5 border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary">
-          <option value="">All</option>
-          <option value="tested">Tested</option>
-          <option value="untested">Untested</option>
-        </select>
-      </div>
-      <div id="vehicleCards" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
-      <div id="loadMoreContainer" class="flex justify-center mt-4 hidden">
-        <button id="loadMoreBtn" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition">Load More</button>
+
+      <!-- Main Content -->
+      <div class="p-6 space-y-6">
+        <!-- Filters Section -->
+        <div class="mb-6">
+          <h3 class="text-lg font-medium text-gray-700 mb-3 flex items-center">
+            <i class="fas fa-filter text-primary mr-2"></i>
+            Filter Kendaraan
+          </h3>
+          <div class="flex flex-wrap gap-4">
+            <input id="filterPlat" type="text" placeholder="Search Plat" class="flex-grow sm:flex-shrink-0 w-full sm:w-1/5 border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary" />
+            <select id="filterMerek" class="w-full sm:w-1/5 border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary">
+              <option value="">All Mereks</option>
+            </select>
+            <select id="filterTipe" class="w-full sm:w-1/5 border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary">
+              <option value="">All Tipes</option>
+            </select>
+            <select id="filterJenis" class="w-full sm:w-1/5 border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary">
+              <option value="">All Jenis</option>
+              <option value="umum">Umum</option>
+              <option value="dinas">Dinas</option>
+            </select>
+            <select id="filterTested" class="w-full sm:w-1/5 border border-gray-300 rounded p-2 focus:ring-primary focus:border-primary">
+              <option value="">All</option>
+              <option value="tested">Tested</option>
+              <option value="untested">Untested</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Vehicle Grid -->
+        <div id="vehicleCards" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+        
+        <!-- Load More Button -->
+        <div id="loadMoreContainer" class="flex justify-center mt-4 hidden">
+          <button id="loadMoreBtn" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors">
+            <i class="fas fa-plus mr-2"></i>Load More
+          </button>
+        </div>
       </div>
       
       <!-- Modal for test input -->
       <div id="testModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
-        <div class="bg-white shadow-lg rounded-lg overflow-hidden p-6 space-y-6 relative w-11/12 max-w-md">
-          <button id="modalClose" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl focus:outline-none">
-            <i class="fas fa-times"></i>
-          </button>
-          
-          <div id="kendaraan_info" class="mb-4">
-            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-lg">
-              <div class="flex items-center">
-                <i class="fas fa-car text-blue-600 mr-3"></i>
-                <span id="kendaraan_detail" class="text-blue-700"></span>
-              </div>
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden relative w-11/12 max-w-md">
+          <!-- Modal Header -->
+          <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-bold text-white">Input Hasil Uji Emisi</h3>
+              <button id="modalClose" class="text-white hover:text-gray-200 focus:outline-none">
+                <i class="fas fa-times"></i>
+              </button>
             </div>
           </div>
           
-          <form id="hasilUjiForm" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <!-- CO Field -->
-              <div class="form-field">
-                <label for="co" class="block text-sm font-medium text-gray-700 mb-1">CO (%)</label>
-                <input id="co" type="number" step="0.01" class="w-full border rounded p-2 focus:ring-primary focus:border-primary" placeholder="0.00">
-              </div>
-              <!-- CO2 Field -->
-              <div class="form-field">
-                <label for="co2" class="block text-sm font-medium text-gray-700 mb-1">CO2 (%)</label>
-                <input id="co2" type="number" step="0.01" class="w-full border rounded p-2 focus:ring-primary focus:border-primary" placeholder="0.00">
-              </div>
-              <!-- HC Field -->
-              <div class="form-field">
-                <label for="hc" class="block text-sm font-medium text-gray-700 mb-1">HC (ppm)</label>
-                <input id="hc" type="number" class="w-full border rounded p-2 focus:ring-primary focus:border-primary" placeholder="0">
-              </div>
-              <!-- O2 Field -->
-              <div class="form-field">
-                <label for="o2" class="block text-sm font-medium text-gray-700 mb-1">O2 (%)</label>
-                <input id="o2" type="number" step="0.01" class="w-full border rounded p-2 focus:ring-primary focus:border-primary" placeholder="0.00">
-              </div>
-              <!-- Lambda Field -->
-              <div class="form-field">
-                <label for="lambda" class="block text-sm font-medium text-gray-700 mb-1">Lambda</label>
-                <input id="lambda" type="number" step="0.01" class="w-full border rounded p-2 focus:ring-primary focus:border-primary" placeholder="0.00">
-              </div>
-              <!-- Opacity Field (initially hidden, shown only for diesel) -->
-              <div id="opacityField" class="form-field hidden">
-                <label for="opacity" class="block text-sm font-medium text-gray-700 mb-1">Opasitas (%)</label>
-                <input id="opacity" type="number" step="0.1" class="w-full border rounded p-2 focus:ring-primary focus:border-primary" min="0" placeholder="0.0">
+          <div class="p-6 space-y-6">
+            <div id="kendaraan_info" class="mb-4">
+              <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-lg">
+                <div class="flex items-center">
+                  <i class="fas fa-car text-blue-600 mr-3"></i>
+                  <span id="kendaraan_detail" class="text-blue-700"></span>
+                </div>
               </div>
             </div>
-            <button type="submit" class="w-full bg-primary text-white py-2 rounded mt-4 hover:bg-primary-dark transition-colors">
-              Simpan Hasil
-            </button>
-            <button id="clearBtn" type="button" class="w-full bg-red-500 text-white py-2 rounded hidden mt-2 hover:bg-red-600 transition-colors">
-              Hapus Data Uji
-            </button>
-          </form>
-          
-          <div id="hasil" class="mt-4 space-y-2 hidden">
-            <h3 class="text-lg font-semibold">Hasil Pengujian:</h3>
-            <div id="validasi" class="p-2 rounded bg-gray-100"></div>
-            <div id="kelulusan" class="p-2 rounded bg-gray-100"></div>
+            
+            <form id="hasilUjiForm" class="space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- CO Field -->
+                <div class="form-field">
+                  <label for="co" class="block text-sm font-medium text-gray-700 mb-1">CO (%)</label>
+                  <input id="co" type="number" step="0.01" class="w-full border rounded p-2 focus:ring-primary focus:border-primary" placeholder="0.00">
+                </div>
+                <!-- CO2 Field -->
+                <div class="form-field">
+                  <label for="co2" class="block text-sm font-medium text-gray-700 mb-1">CO2 (%)</label>
+                  <input id="co2" type="number" step="0.01" class="w-full border rounded p-2 focus:ring-primary focus:border-primary" placeholder="0.00">
+                </div>
+                <!-- HC Field -->
+                <div class="form-field">
+                  <label for="hc" class="block text-sm font-medium text-gray-700 mb-1">HC (ppm)</label>
+                  <input id="hc" type="number" class="w-full border rounded p-2 focus:ring-primary focus:border-primary" placeholder="0">
+                </div>
+                <!-- O2 Field -->
+                <div class="form-field">
+                  <label for="o2" class="block text-sm font-medium text-gray-700 mb-1">O2 (%)</label>
+                  <input id="o2" type="number" step="0.01" class="w-full border rounded p-2 focus:ring-primary focus:border-primary" placeholder="0.00">
+                </div>
+                <!-- Lambda Field -->
+                <div class="form-field">
+                  <label for="lambda" class="block text-sm font-medium text-gray-700 mb-1">Lambda</label>
+                  <input id="lambda" type="number" step="0.01" class="w-full border rounded p-2 focus:ring-primary focus:border-primary" placeholder="0.00">
+                </div>
+                <!-- Opacity Field (initially hidden, shown only for diesel) -->
+                <div id="opacityField" class="form-field hidden">
+                  <label for="opacity" class="block text-sm font-medium text-gray-700 mb-1">Opasitas (%)</label>
+                  <input id="opacity" type="number" step="0.1" class="w-full border rounded p-2 focus:ring-primary focus:border-primary" min="0" placeholder="0.0">
+                </div>
+              </div>
+              <button type="submit" class="w-full bg-primary text-white py-2 rounded mt-4 hover:bg-primary-dark transition-colors">
+                <i class="fas fa-save mr-2"></i>Simpan Hasil
+              </button>
+              <button id="clearBtn" type="button" class="w-full bg-red-500 text-white py-2 rounded hidden mt-2 hover:bg-red-600 transition-colors">
+                <i class="fas fa-trash mr-2"></i>Hapus Data Uji
+              </button>
+            </form>
+            
+            <div id="hasil" class="mt-4 space-y-2 hidden">
+              <h3 class="text-lg font-semibold">Hasil Pengujian:</h3>
+              <div id="validasi" class="p-2 rounded bg-gray-100"></div>
+              <div id="kelulusan" class="p-2 rounded bg-gray-100"></div>
+            </div>
           </div>
         </div>
       </div>
       
       <!-- Confirm delete vehicle Modal -->
       <div id="confirmModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
-        <div class="bg-white shadow-lg rounded-lg p-6 relative w-11/12 max-w-sm">
-          <button id="confirmClose" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl focus:outline-none">
-            <i class="fas fa-times"></i>
-          </button>
-          <div class="flex items-center mb-4 text-red-600">
-            <i class="fas fa-exclamation-triangle mr-2 text-xl"></i>
-            <h3 class="font-medium">Konfirmasi</h3>
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden relative w-11/12 max-w-sm">
+          <!-- Modal Header -->
+          <div class="bg-gradient-to-r from-red-500 to-red-600 p-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-bold text-white flex items-center">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                Konfirmasi
+              </h3>
+              <button id="confirmClose" class="text-white hover:text-gray-200 focus:outline-none">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
           </div>
-          <p id="confirmText" class="text-gray-800 mb-4">Anda yakin?</p>
-          <div class="flex justify-end space-x-4">
-            <button id="confirmNo" class="py-1 px-4 bg-gray-300 rounded hover:bg-gray-400 transition-colors">
-              Batal
-            </button>
-            <button id="confirmYes" class="py-1 px-4 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
-              Hapus
-            </button>
+          
+          <div class="p-6">
+            <p id="confirmText" class="text-gray-800 mb-4">Anda yakin?</p>
+            <div class="flex justify-end space-x-4">
+              <button id="confirmNo" class="py-1 px-4 bg-gray-300 rounded hover:bg-gray-400 transition-colors">
+                Batal
+              </button>
+              <button id="confirmYes" class="py-1 px-4 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
+                Hapus
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+{% endblock %}
+
+{% block scripts %}
   <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
   <script src="{{ url_for('static', filename='js/halaman2.js') }}"></script>
 {% endblock %}
